@@ -25,7 +25,7 @@ TODO
 function monte_carlo(p::MonteCarloParams, ruleset::RuleSet, typ::Symbol)
     best_tree = rand(RuleNode, ruleset, typ, p.max_depth)
     best_loss = loss(best_tree)
-    for i = 1:p.num_samples
+    for i = 2:p.num_samples
         tree = rand(RuleNode, ruleset, typ, p.max_depth)
         los = loss(tree)
         if los < best_loss
