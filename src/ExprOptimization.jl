@@ -13,8 +13,12 @@ export
         loss,
         optimize,
         ExprOptResults,
+
         MonteCarloParams,
-        GeneticProgramParams
+
+        GeneticProgramParams,
+        RandomInit,
+        TournamentSelection
 
 abstract type ExprOptParams end
 
@@ -30,5 +34,8 @@ function optimize end  #implemented by algorithms
 
 include("MonteCarlo/monte_carlo.jl")
 using .MonteCarlo
+
+include("GeneticProgram/genetic_program.jl")
+using .GeneticProgram
 
 end # module
