@@ -29,8 +29,15 @@ struct ExprOptResults
     alg_results::Any
 end
 
-function loss end #implemented by user
-function optimize end  #implemented by algorithms
+#functions implemented by user
+function loss end       #loss function, loss(tree::RuleNode)
+
+"""
+optimize(p::ExprOptParams, ruleset::RuleSet, typ::Symbol)
+
+Main entry for expression optimization.  Use concrete ExprOptParams to specify optimization algorithm.
+"""
+function optimize end   #implemented by algorithms
 
 include("MonteCarlo/monte_carlo.jl")
 using .MonteCarlo

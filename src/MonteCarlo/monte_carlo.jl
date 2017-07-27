@@ -20,7 +20,7 @@ optimize(p::MonteCarloParams, ruleset::RuleSet, typ::Symbol) = monte_carlo(p, ru
 """
     monte_carlo(p::MonteCarloParams, ruleset::RuleSet, typ::Symbol)
 
-TODO
+Draw Monte Carlo samples from the grammar and return the one with the best loss.
 """
 function monte_carlo(p::MonteCarloParams, ruleset::RuleSet, typ::Symbol)
     best_tree = rand(RuleNode, ruleset, typ, p.max_depth)
@@ -29,8 +29,7 @@ function monte_carlo(p::MonteCarloParams, ruleset::RuleSet, typ::Symbol)
         tree = rand(RuleNode, ruleset, typ, p.max_depth)
         los = loss(tree)
         if los < best_loss
-            best_tree = tree
-            best_loss = los
+            best_tree, best_loss = tree, los
         end
     end
     ExprOptResults(best_tree, best_loss, get_executable(best_tree, ruleset), nothing)

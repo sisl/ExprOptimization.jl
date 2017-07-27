@@ -13,7 +13,7 @@ export GeneticProgramParams
 
 const OPERATORS = [:reproduction, :crossover, :mutation]
 
-abstract type Initializer end
+abstract type Initializer end 
 abstract type Selector end
 
 struct GeneticProgramParams <: ExprOptParams
@@ -25,14 +25,14 @@ struct GeneticProgramParams <: ExprOptParams
     selector::Selector
 end
 function GeneticProgramParams(
-    pop_size::Int, 
-    iterations::Int, 
-    max_depth::Int,
-    p_reproduction::Float64, 
-    p_crossover::Float64, 
-    p_mutation::Float64; 
-    initializer::Initializer=RandomInit(),
-    selector::Selector=TournamentSelection())
+    pop_size::Int,                          #population size 
+    iterations::Int,                        #number of generations 
+    max_depth::Int,                         #maximum depth of derivation tree
+    p_reproduction::Float64,                #probability of reproduction operator 
+    p_crossover::Float64,                   #probability of crossover operator
+    p_mutation::Float64;                    #probability of mutation operator 
+    initializer::Initializer=RandomInit(),      #initialization method 
+    selector::Selector=TournamentSelection())   #selection method 
 
     op_probs = Weights([p_reproduction, p_crossover, p_mutation])
     GeneticProgramParams(pop_size, iterations, max_depth, op_probs, initializer, selector)
@@ -49,7 +49,12 @@ optimize(p::GeneticProgramParams, ruleset::RuleSet, typ::Symbol) = genetic_progr
 """
     genetic_program(p::GeneticProgramParams, ruleset::RuleSet, typ::Symbol)
 
-TODO
+Strongly-typed genetic programming optimization. See: 
+
+Montana, "Strongly-typed genetic programming", Evolutionary Computation, Vol 3, Issue 2, 1995.
+Koza, "Genetic programming: on the programming of computers by means of natural selection", MIT Press, 1992 
+
+Three operators are implemented: reproduction, crossover, and mutation.
 """
 function genetic_program(p::GeneticProgramParams, ruleset::RuleSet, typ::Symbol)
 
@@ -86,14 +91,29 @@ function genetic_program(p::GeneticProgramParams, ruleset::RuleSet, typ::Symbol)
     ExprOptResults(best_tree, best_loss, get_executable(best_tree, ruleset), nothing)
 end
 
+"""
+initialize(::RandomInit, pop_size::Int, ruleset::RuleSet, typ::Symbol, max_depth::Int)
+
+Random population initialization.
+"""
 initialize(::RandomInit, pop_size::Int, ruleset::RuleSet, typ::Symbol, max_depth::Int) = 
     [rand(RuleNode, ruleset, typ, max_depth) for i = 1:pop_size]
 
+"""
+select(p::TournamentSelection, pop::Vector{RuleNode}, losses::Vector{Float64})
+
+Tournament selection.
+"""
 function select(p::TournamentSelection, pop::Vector{RuleNode}, losses::Vector{Float64})
     ids = StatsBase.seqsample_c!(collect(1:length(pop)), zeros(Int, p.tournament_size)) 
     pop[ids[1]] #assume sorted
 end
 
+"""
+evaluate!(pop::Vector{RuleNode}, losses::Vector{Float64}, best_tree::RuleNode, best_loss::Float64)
+
+Evaluate the loss function for population and sort.  Update the globally best tree, if needed.
+"""
 function evaluate!(pop::Vector{RuleNode}, losses::Vector{Float64}, best_tree::RuleNode, 
     best_loss::Float64)
     for (i, ind) in enumerate(pop)
@@ -109,6 +129,11 @@ function evaluate!(pop::Vector{RuleNode}, losses::Vector{Float64}, best_tree::Ru
     (best_tree, best_loss)
 end
 
+"""
+crossover(a::RuleNode, b::RuleNode, ruleset::RuleSet)
+
+Crossover genetic operator.  Pick a random node from 'a', then pick a random node from 'b' that has the same type, then exchange the subtrees.
+"""
 function crossover(a::RuleNode, b::RuleNode, ruleset::RuleSet)
     child_a = deepcopy(a)
     child_b = deepcopy(b)
@@ -125,6 +150,11 @@ function crossover(a::RuleNode, b::RuleNode, ruleset::RuleSet)
     (child_a, child_b)
 end
 
+"""
+mutation(a::RuleNode, ruleset::RuleSet, max_depth::Int=3)
+
+Mutation genetic operator.  Pick a random node from 'a', then replace the subtree with a random one.
+"""
 function mutation(a::RuleNode, ruleset::RuleSet, max_depth::Int=3)
     child = deepcopy(a)
     loc = sample(NodeLoc, child)
