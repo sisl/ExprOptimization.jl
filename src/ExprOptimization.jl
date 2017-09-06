@@ -18,7 +18,8 @@ export
 
         GeneticProgramParams,
         RandomInit,
-        TournamentSelection
+        TournamentSelection,
+        TruncationSelection
 
 abstract type ExprOptParams end
 

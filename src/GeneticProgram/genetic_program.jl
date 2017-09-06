@@ -9,7 +9,7 @@ using ..ExprOptResults
 
 import ..optimize
 
-export GeneticProgramParams
+export GeneticProgramParams, RandomInit, TournamentSelection, TruncationSelection
 
 const OPERATORS = [:reproduction, :crossover, :mutation]
 
@@ -43,6 +43,10 @@ struct TournamentSelection <: SelectionMethod
     tournament_size::Int
 end
 TournamentSelection() = TournamentSelection(2)
+struct TruncationSelection <: SelectionMethod 
+    k::Int #top k to keep
+end
+TruncationSelection() = TruncationSelection(100)
 
 optimize(p::GeneticProgramParams, grammar::Grammar, typ::Symbol) = genetic_program(p, grammar, typ)
 
@@ -104,6 +108,15 @@ Tournament selection.
 function select(p::TournamentSelection, pop::Vector{RuleNode}, losses::Vector{Float64})
     ids = StatsBase.seqsample_c!(collect(1:length(pop)), zeros(Int, p.tournament_size)) 
     pop[ids[1]] #assume sorted
+end
+
+"""
+select(p::TruncationSelection, pop::Vector{RuleNode}, losses::Vector{Float64})
+
+Truncation selection.
+"""
+function select(p::TruncationSelection, pop::Vector{RuleNode}, losses::Vector{Float64})
+    pop[rand(1:p.k)]
 end
 
 """
