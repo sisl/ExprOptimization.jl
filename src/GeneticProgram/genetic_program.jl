@@ -44,10 +44,10 @@ struct TournamentSelection <: Selector
 end
 TournamentSelection() = TournamentSelection(2)
 
-optimize(p::GeneticProgramParams, ruleset::RuleSet, typ::Symbol) = genetic_program(p, ruleset, typ)
+optimize(p::GeneticProgramParams, grammar::Grammar, typ::Symbol) = genetic_program(p, grammar, typ)
 
 """
-    genetic_program(p::GeneticProgramParams, ruleset::RuleSet, typ::Symbol)
+    genetic_program(p::GeneticProgramParams, grammar::Grammar, typ::Symbol)
 
 Strongly-typed genetic programming optimization. See: 
 
@@ -56,9 +56,9 @@ Koza, "Genetic programming: on the programming of computers by means of natural 
 
 Three operators are implemented: reproduction, crossover, and mutation.
 """
-function genetic_program(p::GeneticProgramParams, ruleset::RuleSet, typ::Symbol)
+function genetic_program(p::GeneticProgramParams, grammar::Grammar, typ::Symbol)
 
-    pop0 = initialize(p.initializer, p.pop_size, ruleset, typ, p.max_depth)
+    pop0 = initialize(p.initializer, p.pop_size, grammar, typ, p.max_depth)
     pop1 = Vector{RuleNode}(p.pop_size)
     losses = Vector{Float64}(p.pop_size)
 
@@ -74,30 +74,30 @@ function genetic_program(p::GeneticProgramParams, ruleset::RuleSet, typ::Symbol)
             elseif op == :crossover
                 ind1 = select(p.selector, pop0, losses)
                 ind2 = select(p.selector, pop0, losses)
-                child1, child2 = crossover(ind1, ind2, ruleset)
+                child1, child2 = crossover(ind1, ind2, grammar)
                 pop1[i+=1] = child1
                 if i < p.pop_size
                     pop1[i+=1] = child2
                 end
             elseif op == :mutation
                 ind1 = select(p.selector, pop0, losses)
-                child1 = mutation(ind1, ruleset, p.max_depth)
+                child1 = mutation(ind1, grammar, p.max_depth)
                 pop1[i+=1] = child1
             end
         end
         pop0, pop1 = pop1, pop0
         best_tree, best_loss = evaluate!(pop0, losses, best_tree, best_loss)
     end
-    ExprOptResults(best_tree, best_loss, get_executable(best_tree, ruleset), nothing)
+    ExprOptResults(best_tree, best_loss, get_executable(best_tree, grammar), nothing)
 end
 
 """
-initialize(::RandomInit, pop_size::Int, ruleset::RuleSet, typ::Symbol, max_depth::Int)
+initialize(::RandomInit, pop_size::Int, grammar::Grammar, typ::Symbol, max_depth::Int)
 
 Random population initialization.
 """
-initialize(::RandomInit, pop_size::Int, ruleset::RuleSet, typ::Symbol, max_depth::Int) = 
-    [rand(RuleNode, ruleset, typ, max_depth) for i = 1:pop_size]
+initialize(::RandomInit, pop_size::Int, grammar::Grammar, typ::Symbol, max_depth::Int) = 
+    [rand(RuleNode, grammar, typ, max_depth) for i = 1:pop_size]
 
 """
 select(p::TournamentSelection, pop::Vector{RuleNode}, losses::Vector{Float64})
@@ -130,18 +130,18 @@ function evaluate!(pop::Vector{RuleNode}, losses::Vector{Float64}, best_tree::Ru
 end
 
 """
-crossover(a::RuleNode, b::RuleNode, ruleset::RuleSet)
+crossover(a::RuleNode, b::RuleNode, grammar::Grammar)
 
 Crossover genetic operator.  Pick a random node from 'a', then pick a random node from 'b' that has the same type, then exchange the subtrees.
 """
-function crossover(a::RuleNode, b::RuleNode, ruleset::RuleSet)
+function crossover(a::RuleNode, b::RuleNode, grammar::Grammar)
     child_a = deepcopy(a)
     child_b = deepcopy(b)
 
     loc_a = sample(NodeLoc, child_a)
     node_a = get(child_a, loc_a) 
 
-    loc_b = sample(NodeLoc, child_b, ruleset.types[node_a.ind], ruleset) 
+    loc_b = sample(NodeLoc, child_b, grammar.types[node_a.ind], grammar) 
     node_b = get(child_b, loc_b)
 
     insert!(child_a, loc_a, node_b)
@@ -151,15 +151,15 @@ function crossover(a::RuleNode, b::RuleNode, ruleset::RuleSet)
 end
 
 """
-mutation(a::RuleNode, ruleset::RuleSet, max_depth::Int=3)
+mutation(a::RuleNode, grammar::Grammar, max_depth::Int=3)
 
 Mutation genetic operator.  Pick a random node from 'a', then replace the subtree with a random one.
 """
-function mutation(a::RuleNode, ruleset::RuleSet, max_depth::Int=3)
+function mutation(a::RuleNode, grammar::Grammar, max_depth::Int=3)
     child = deepcopy(a)
     loc = sample(NodeLoc, child)
     node = get(child, loc)
-    insert!(child, loc, rand(RuleNode, ruleset, ruleset.types[node.ind], max_depth))
+    insert!(child, loc, rand(RuleNode, grammar, grammar.types[node.ind], max_depth))
 
     child
 end

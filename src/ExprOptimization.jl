@@ -5,8 +5,8 @@ module ExprOptimization
 using ExprRules
 
 export 
-        @ruleset,
-        RuleSet,
+        @grammar,
+        Grammar,
         RuleNode,
         get_executable,
 
@@ -33,7 +33,7 @@ end
 function loss end       #loss function, loss(tree::RuleNode)
 
 """
-optimize(p::ExprOptParams, ruleset::RuleSet, typ::Symbol)
+optimize(p::ExprOptParams, grammar::Grammar, typ::Symbol)
 
 Main entry for expression optimization.  Use concrete ExprOptParams to specify optimization algorithm.
 """
