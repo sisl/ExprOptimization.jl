@@ -13,16 +13,16 @@ export GeneticProgramParams
 
 const OPERATORS = [:reproduction, :crossover, :mutation]
 
-abstract type Initializer end 
-abstract type Selector end
+abstract type InitializationMethod end 
+abstract type SelectionMethod end
 
 struct GeneticProgramParams <: ExprOptParams
     pop_size::Int
     iterations::Int
     max_depth::Int
     op_probs::Weights
-    initializer::Initializer
-    selector::Selector
+    init_method::InitializationMethod
+    select_method::SelectionMethod
 end
 function GeneticProgramParams(
     pop_size::Int,                          #population size 
@@ -31,15 +31,15 @@ function GeneticProgramParams(
     p_reproduction::Float64,                #probability of reproduction operator 
     p_crossover::Float64,                   #probability of crossover operator
     p_mutation::Float64;                    #probability of mutation operator 
-    initializer::Initializer=RandomInit(),      #initialization method 
-    selector::Selector=TournamentSelection())   #selection method 
+    init_method::InitializationMethod=RandomInit(),      #initialization method 
+    select_method::SelectionMethod=TournamentSelection())   #selection method 
 
     op_probs = Weights([p_reproduction, p_crossover, p_mutation])
-    GeneticProgramParams(pop_size, iterations, max_depth, op_probs, initializer, selector)
+    GeneticProgramParams(pop_size, iterations, max_depth, op_probs, init_method, select_method)
 end
 
-struct RandomInit <: Initializer end
-struct TournamentSelection <: Selector 
+struct RandomInit <: InitializationMethod end
+struct TournamentSelection <: SelectionMethod 
     tournament_size::Int
 end
 TournamentSelection() = TournamentSelection(2)
@@ -58,7 +58,7 @@ Three operators are implemented: reproduction, crossover, and mutation.
 """
 function genetic_program(p::GeneticProgramParams, grammar::Grammar, typ::Symbol)
 
-    pop0 = initialize(p.initializer, p.pop_size, grammar, typ, p.max_depth)
+    pop0 = initialize(p.init_method, p.pop_size, grammar, typ, p.max_depth)
     pop1 = Vector{RuleNode}(p.pop_size)
     losses = Vector{Float64}(p.pop_size)
 
@@ -69,18 +69,15 @@ function genetic_program(p::GeneticProgramParams, grammar::Grammar, typ::Symbol)
         while i < p.pop_size
             op = sample(OPERATORS, p.op_probs)
             if op == :reproduction
-                ind1 = select(p.selector, pop0, losses)
+                ind1 = select(p.select_method, pop0, losses)
                 pop1[i+=1] = deepcopy(ind1)
             elseif op == :crossover
-                ind1 = select(p.selector, pop0, losses)
-                ind2 = select(p.selector, pop0, losses)
-                child1, child2 = crossover(ind1, ind2, grammar)
-                pop1[i+=1] = child1
-                if i < p.pop_size
-                    pop1[i+=1] = child2
-                end
+                ind1 = select(p.select_method, pop0, losses)
+                ind2 = select(p.select_method, pop0, losses)
+                child = crossover(ind1, ind2, grammar)
+                pop1[i+=1] = child
             elseif op == :mutation
-                ind1 = select(p.selector, pop0, losses)
+                ind1 = select(p.select_method, pop0, losses)
                 child1 = mutation(ind1, grammar, p.max_depth)
                 pop1[i+=1] = child1
             end
@@ -122,7 +119,6 @@ function evaluate!(pop::Vector{RuleNode}, losses::Vector{Float64}, best_tree::Ru
     perm = sortperm(losses)
     losses[:] = losses[perm]
     pop[:] = pop[perm]
-
     if losses[1] < best_loss
         best_tree, best_loss = pop[1], losses[1]
     end
@@ -132,22 +128,17 @@ end
 """
 crossover(a::RuleNode, b::RuleNode, grammar::Grammar)
 
-Crossover genetic operator.  Pick a random node from 'a', then pick a random node from 'b' that has the same type, then exchange the subtrees.
+Crossover genetic operator.  Pick a random node from 'a', then pick a random node from 'b' that has the same type, then replace the subtree 
 """
 function crossover(a::RuleNode, b::RuleNode, grammar::Grammar)
-    child_a = deepcopy(a)
-    child_b = deepcopy(b)
-
-    loc_a = sample(NodeLoc, child_a)
-    node_a = get(child_a, loc_a) 
-
-    loc_b = sample(NodeLoc, child_b, grammar.types[node_a.ind], grammar) 
-    node_b = get(child_b, loc_b)
-
-    insert!(child_a, loc_a, node_b)
-    insert!(child_b, loc_b, node_a)
-
-    (child_a, child_b)
+    child = deepcopy(a)
+    loc = sample(NodeLoc, child)
+    typ = return_type(grammar, get(child, loc).ind)
+    if contains_returntype(b, grammar, typ)
+        subtree = sample(b, typ, grammar)
+        insert!(child, loc, subtree)
+    end
+    child 
 end
 
 """
@@ -155,12 +146,12 @@ mutation(a::RuleNode, grammar::Grammar, max_depth::Int=3)
 
 Mutation genetic operator.  Pick a random node from 'a', then replace the subtree with a random one.
 """
-function mutation(a::RuleNode, grammar::Grammar, max_depth::Int=3)
+function mutation(a::RuleNode, grammar::Grammar, max_depth::Int=5)
     child = deepcopy(a)
     loc = sample(NodeLoc, child)
-    node = get(child, loc)
-    insert!(child, loc, rand(RuleNode, grammar, grammar.types[node.ind], max_depth))
-
+    typ = return_type(grammar, get(child, loc).ind)
+    subtree = rand(RuleNode, grammar, typ)
+    insert!(child, loc, subtree)
     child
 end
 
