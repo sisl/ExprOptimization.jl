@@ -10,6 +10,13 @@ import ..optimize
 
 export MonteCarloParams
 
+"""
+    MonteCarloParams(num_samples::Int, max_depth::Int)
+
+Parameters for Monte Carlo.
+    num_samples: Number of samples
+    max_depth: maximum depth of derivation tree
+"""
 struct MonteCarloParams <: ExprOptParams
     num_samples::Int
     max_depth::Int
@@ -23,9 +30,8 @@ optimize(p::MonteCarloParams, grammar::Grammar, typ::Symbol) = monte_carlo(p, gr
 Draw Monte Carlo samples from the grammar and return the one with the best loss.
 """
 function monte_carlo(p::MonteCarloParams, grammar::Grammar, typ::Symbol)
-    best_tree = rand(RuleNode, grammar, typ, p.max_depth)
-    best_loss = loss(best_tree)
-    for i = 2:p.num_samples
+    best_tree, best_loss = RuleNode(0), Inf
+    for i = 1:p.num_samples
         tree = rand(RuleNode, grammar, typ, p.max_depth)
         los = loss(tree)
         if los < best_loss

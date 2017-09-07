@@ -9,13 +9,29 @@ using ..ExprOptResults
 
 import ..optimize
 
-export GeneticProgramParams, RandomInit, TournamentSelection, TruncationSelection
+export GeneticProgramParams
 
 const OPERATORS = [:reproduction, :crossover, :mutation]
 
 abstract type InitializationMethod end 
 abstract type SelectionMethod end
 
+"""
+    GeneticProgramParams(pop_size::Int, iterations::Int, max_depth::Int, 
+        p_reproduction::Float64, p_crossover::Float64, p_mutation::Float64;
+        init_method::InitializationMethod=RandomInit(), 
+        select_method::SelectionMethod=TournamentSelection())
+
+Parameters for Genetic Programming.
+    pop_size: population size
+    iterations: number of iterations
+    max_depth: maximum depth of derivation tree
+    p_reproduction: probability of reproduction operator
+    p_crossover: probability of crossover operator
+    p_mutation: probability of mutation operator
+    init_method: Initialization method
+    select_method: Initialization method
+"""
 struct GeneticProgramParams <: ExprOptParams
     pop_size::Int
     iterations::Int
@@ -23,19 +39,20 @@ struct GeneticProgramParams <: ExprOptParams
     op_probs::Weights
     init_method::InitializationMethod
     select_method::SelectionMethod
-end
-function GeneticProgramParams(
-    pop_size::Int,                          #population size 
-    iterations::Int,                        #number of generations 
-    max_depth::Int,                         #maximum depth of derivation tree
-    p_reproduction::Float64,                #probability of reproduction operator 
-    p_crossover::Float64,                   #probability of crossover operator
-    p_mutation::Float64;                    #probability of mutation operator 
-    init_method::InitializationMethod=RandomInit(),      #initialization method 
-    select_method::SelectionMethod=TournamentSelection())   #selection method 
 
-    op_probs = Weights([p_reproduction, p_crossover, p_mutation])
-    GeneticProgramParams(pop_size, iterations, max_depth, op_probs, init_method, select_method)
+    function GeneticProgramParams(
+        pop_size::Int,                          #population size 
+        iterations::Int,                        #number of generations 
+        max_depth::Int,                         #maximum depth of derivation tree
+        p_reproduction::Float64,                #probability of reproduction operator 
+        p_crossover::Float64,                   #probability of crossover operator
+        p_mutation::Float64;                    #probability of mutation operator 
+        init_method::InitializationMethod=RandomInit(),      #initialization method 
+        select_method::SelectionMethod=TournamentSelection())   #selection method 
+
+        op_probs = Weights([p_reproduction, p_crossover, p_mutation])
+        new(pop_size, iterations, max_depth, op_probs, init_method, select_method)
+    end
 end
 
 struct RandomInit <: InitializationMethod end
@@ -67,7 +84,6 @@ function genetic_program(p::GeneticProgramParams, grammar::Grammar, typ::Symbol)
     losses = Vector{Float64}(p.pop_size)
 
     best_tree, best_loss = evaluate!(pop0, losses, pop0[1], Inf)
-
     for iter = 1:p.iterations 
         i = 0
         while i < p.pop_size
@@ -93,7 +109,7 @@ function genetic_program(p::GeneticProgramParams, grammar::Grammar, typ::Symbol)
 end
 
 """
-initialize(::RandomInit, pop_size::Int, grammar::Grammar, typ::Symbol, max_depth::Int)
+    initialize(::RandomInit, pop_size::Int, grammar::Grammar, typ::Symbol, max_depth::Int)
 
 Random population initialization.
 """
@@ -101,7 +117,7 @@ initialize(::RandomInit, pop_size::Int, grammar::Grammar, typ::Symbol, max_depth
     [rand(RuleNode, grammar, typ, max_depth) for i = 1:pop_size]
 
 """
-select(p::TournamentSelection, pop::Vector{RuleNode}, losses::Vector{Float64})
+    select(p::TournamentSelection, pop::Vector{RuleNode}, losses::Vector{Float64})
 
 Tournament selection.
 """
@@ -111,7 +127,7 @@ function select(p::TournamentSelection, pop::Vector{RuleNode}, losses::Vector{Fl
 end
 
 """
-select(p::TruncationSelection, pop::Vector{RuleNode}, losses::Vector{Float64})
+    select(p::TruncationSelection, pop::Vector{RuleNode}, losses::Vector{Float64})
 
 Truncation selection.
 """
@@ -120,18 +136,16 @@ function select(p::TruncationSelection, pop::Vector{RuleNode}, losses::Vector{Fl
 end
 
 """
-evaluate!(pop::Vector{RuleNode}, losses::Vector{Float64}, best_tree::RuleNode, best_loss::Float64)
+    evaluate!(pop::Vector{RuleNode}, losses::Vector{Float64}, best_tree::RuleNode, best_loss::Float64)
 
 Evaluate the loss function for population and sort.  Update the globally best tree, if needed.
 """
 function evaluate!(pop::Vector{RuleNode}, losses::Vector{Float64}, best_tree::RuleNode, 
     best_loss::Float64)
-    for (i, ind) in enumerate(pop)
-        losses[i] = loss(ind)
-    end
+
+    losses[:] = loss.(pop)
     perm = sortperm(losses)
-    losses[:] = losses[perm]
-    pop[:] = pop[perm]
+    pop[:], losses[:] = pop[perm], losses[perm]
     if losses[1] < best_loss
         best_tree, best_loss = pop[1], losses[1]
     end
@@ -139,7 +153,7 @@ function evaluate!(pop::Vector{RuleNode}, losses::Vector{Float64}, best_tree::Ru
 end
 
 """
-crossover(a::RuleNode, b::RuleNode, grammar::Grammar)
+    crossover(a::RuleNode, b::RuleNode, grammar::Grammar)
 
 Crossover genetic operator.  Pick a random node from 'a', then pick a random node from 'b' that has the same type, then replace the subtree 
 """
@@ -155,7 +169,7 @@ function crossover(a::RuleNode, b::RuleNode, grammar::Grammar)
 end
 
 """
-mutation(a::RuleNode, grammar::Grammar, max_depth::Int=3)
+    mutation(a::RuleNode, grammar::Grammar, max_depth::Int=3)
 
 Mutation genetic operator.  Pick a random node from 'a', then replace the subtree with a random one.
 """

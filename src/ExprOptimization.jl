@@ -14,12 +14,14 @@ export
         optimize,
         ExprOptResults,
 
+        MonteCarlo,
         MonteCarloParams,
 
+        GeneticProgram,
         GeneticProgramParams,
-        RandomInit,
-        TournamentSelection,
-        TruncationSelection
+
+        CrossEntropy,
+        CrossEntropyParams
 
 abstract type ExprOptParams end
 
@@ -34,7 +36,7 @@ end
 function loss end       #loss function, loss(tree::RuleNode)
 
 """
-optimize(p::ExprOptParams, grammar::Grammar, typ::Symbol)
+    optimize(p::ExprOptParams, grammar::Grammar, typ::Symbol)
 
 Main entry for expression optimization.  Use concrete ExprOptParams to specify optimization algorithm.
 """
@@ -45,5 +47,8 @@ using .MonteCarlo
 
 include("GeneticProgram/genetic_program.jl")
 using .GeneticProgram
+
+include("CrossEntropy/cross_entropy.jl")
+using .CrossEntropy
 
 end # module
