@@ -36,7 +36,7 @@ struct GeneticProgramParams <: ExprOptParams
     pop_size::Int
     iterations::Int
     max_depth::Int
-    op_probs::Weights
+    p_operators::Weights
     init_method::InitializationMethod
     select_method::SelectionMethod
 
@@ -50,8 +50,8 @@ struct GeneticProgramParams <: ExprOptParams
         init_method::InitializationMethod=RandomInit(),      #initialization method 
         select_method::SelectionMethod=TournamentSelection())   #selection method 
 
-        op_probs = Weights([p_reproduction, p_crossover, p_mutation])
-        new(pop_size, iterations, max_depth, op_probs, init_method, select_method)
+        p_operators = Weights([p_reproduction, p_crossover, p_mutation])
+        new(pop_size, iterations, max_depth, p_operators, init_method, select_method)
     end
 end
 
@@ -87,7 +87,7 @@ function genetic_program(p::GeneticProgramParams, grammar::Grammar, typ::Symbol)
     for iter = 1:p.iterations 
         i = 0
         while i < p.pop_size
-            op = sample(OPERATORS, p.op_probs)
+            op = sample(OPERATORS, p.p_operators)
             if op == :reproduction
                 ind1 = select(p.select_method, pop0, losses)
                 pop1[i+=1] = deepcopy(ind1)

@@ -21,7 +21,10 @@ export
         GeneticProgramParams,
 
         CrossEntropy,
-        CrossEntropyParams
+        CrossEntropyParams,
+
+        PIPE,
+        PIPEParams
 
 abstract type ExprOptParams end
 
@@ -50,5 +53,8 @@ using .GeneticProgram
 
 include("CrossEntropy/cross_entropy.jl")
 using .CrossEntropy
+
+include("PIPE/pipe.jl")
+using .PIPE
 
 end # module
