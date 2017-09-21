@@ -51,6 +51,8 @@ optimize(p::CrossEntropyParams, grammar::Grammar, typ::Symbol) = cross_entropy(p
 Expression tree optimization using cross-entropy method and probabilistic grammars
 """
 function cross_entropy(p::CrossEntropyParams, grammar::Grammar, typ::Symbol)
+    iseval(grammar) && error("Cross-entropy does not support _() functions in the grammar")
+
     losses = Vector{Float64}(p.pop_size)
 
     pcfg = ProbabilisticGrammar(grammar)

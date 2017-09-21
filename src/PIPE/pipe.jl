@@ -52,6 +52,8 @@ Reference: R. Salustowicz and J. Schmidhuber, "Probabilistic Incremental Program
     Evolutionary Computation, vol. 5, no. 2, pp. 123-141, 1997.
 """
 function pipe(p::PIPEParams, grammar::Grammar, typ::Symbol)
+    iseval(grammar) && error("PIPE does not support _() functions in the grammar")
+
     best_tree, best_loss = RuleNode(0), Inf
     pp = p.ppt_params
     pop = Vector{RuleNode}(p.pop_size)
