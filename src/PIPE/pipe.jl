@@ -2,15 +2,14 @@
 module PIPE
 
 using ExprRules, StatsBase
+using ..PPT
 using ..loss
 using ..ExprOptParams
 using ..ExprOptResults
 
 import ..optimize
 
-export PIPEParams
-
-include("ppt.jl")
+export PPTParams, PIPEParams
 
 """
     PIPEParams

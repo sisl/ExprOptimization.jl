@@ -1,7 +1,8 @@
 
 module CrossEntropy
 
-using ExprRules, ProbabilisticExprRules
+using ExprRules
+using ..ProbabilisticExprRules
 using ..loss
 using ..ExprOptParams
 using ..ExprOptResults

@@ -14,6 +14,10 @@ export
         optimize,
         ExprOptResults,
 
+        ProbabilisticExprRules,
+        PPT,
+        PPTParams,
+
         MonteCarlo,
         MonteCarloParams,
 
@@ -53,6 +57,16 @@ function loss end       #loss function, loss(tree::RuleNode), implemented by use
 Main entry for expression optimization.  Use concrete ExprOptParams to specify optimization algorithm. Optimize using grammar and start symbol, typ.
 """
 function optimize end   #implemented by algorithms
+
+#############################################################################
+# Common base modules
+include("ProbabilisticExprRules/ProbabilisticExprRules.jl")
+
+include("PPT/ppt.jl")
+using .PPT: PPTParams
+
+#############################################################################
+# Optimization algorithms
 
 include("MonteCarlo/monte_carlo.jl")
 using .MonteCarlo

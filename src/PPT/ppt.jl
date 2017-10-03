@@ -1,4 +1,16 @@
+module PPT
+
 using StatsBase
+using ExprRules
+
+export 
+        PPTParams,
+        PPTNode,
+        get_child,
+        probabilities,
+        probability,
+        prune!
+
 
 """
     PPTParams
@@ -18,12 +30,38 @@ struct PPTNode
     ps::Dict{Symbol,Vector{Float64}}
     children::Vector{PPTNode}
 end
+
+"""
+    PPTNode(pp::PPTParams, grammar::Grammar)
+
+Node of a PPT.
+"""
 function PPTNode(pp::PPTParams, grammar::Grammar)
     ps = Dict(typ=>normalize!([isterminal(grammar, i) ?
                                pp.w_terminal : pp.w_nonterm for i in grammar[typ]], 1)
              for typ in nonterminals(grammar))
     PPTNode(ps, PPTNode[])
 end
+
+"""
+    nchildren(node::PPTNode)
+
+Returns the number of children of a node.
+"""
+ExprRules.nchildren(node::PPTNode) = length(node.children)
+
+"""
+    probabilities(node::PPTNode, typ::Symbol)
+
+Returns the probability vector of a node. 
+"""
+probabilities(node::PPTNode, typ::Symbol) = node.ps[typ]
+
+"""
+    get_child(pp::PPTParams, ppt::PPTNode, grammar::Grammar, i::Int)
+
+Returns child node i of a ppt node.  Will construct and initialize it if it doesn't already exist.
+"""
 function get_child(pp::PPTParams, ppt::PPTNode, grammar::Grammar, i::Int)
     if i > length(ppt.children)
         push!(ppt.children, PPTNode(pp, grammar))
@@ -92,3 +130,5 @@ function prune!(ppt::PPTNode, grammar::Grammar, p_threshold::Float64)
     end
     return ppt
 end
+
+end #module
