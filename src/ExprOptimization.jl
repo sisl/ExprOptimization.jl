@@ -28,20 +28,29 @@ export
 
 abstract type ExprOptParams end
 
+"""
+    ExprOptResults
+
+Returned by optimize().  Contains the results of the optimization.
+"""
 struct ExprOptResults
-    tree::RuleNode
-    loss::Float64
-    expr::Any
-    alg_results::Any
+    tree::RuleNode #best tree
+    loss::Float64 #best loss
+    expr::Any #best expression
+    alg_results::Any #algorithm-specific results
 end
 
-#functions implemented by user
-function loss end       #loss function, loss(tree::RuleNode)
+"""
+    loss(tree::RuleNode)
+
+User-defined loss function.  Should be overloaded by user.  Takes an expression tree and returns a real number.  The loss is minimized by the optimization algorithms.
+"""
+function loss end       #loss function, loss(tree::RuleNode), implemented by user
 
 """
     optimize(p::ExprOptParams, grammar::Grammar, typ::Symbol)
 
-Main entry for expression optimization.  Use concrete ExprOptParams to specify optimization algorithm.
+Main entry for expression optimization.  Use concrete ExprOptParams to specify optimization algorithm. Optimize using grammar and start symbol, typ.
 """
 function optimize end   #implemented by algorithms
 

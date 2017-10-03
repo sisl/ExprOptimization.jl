@@ -13,15 +13,15 @@ export CrossEntropyParams
 abstract type InitializationMethod end 
 
 """
-    CrossEntropyParams(pop_size::Int, iterations::Int, max_depth::Int, top_k::Int,
-        init_method::InitializationMethod=RandomInit())
+    CrossEntropyParams
 
 Parameters for Cross Entropy method.
-    pop_size: population size
-    iterations: number of iterations
-    max_depth: maximum depth of derivation tree
-    top_k: top k elite samples used in selection
-    init_method: Initialization method
+# Arguments
+- `pop_size::Int`: population size
+- `iiterations::Int`: number of iterations
+- `max_depth::Int`: maximum depth of derivation tree
+- `top_k::Int`: top k elite samples used in selection
+- `init_method::InitializationMethod`: Initialization method
 """
 struct CrossEntropyParams <: ExprOptParams
     pop_size::Int                                       
@@ -41,14 +41,24 @@ struct CrossEntropyParams <: ExprOptParams
     end
 end
 
+"""
+    RandomInit
+
+Uniformly random initialization method.
+"""
 struct RandomInit <: InitializationMethod end
 
+"""
+    optimize(p::CrossEntropyParams, grammar::Grammar, typ::Symbol)
+
+Expression tree optimization using the cross-entropy method with parameters p, probabilistic grammar 'grammar', and start symbol typ.
+"""
 optimize(p::CrossEntropyParams, grammar::Grammar, typ::Symbol) = cross_entropy(p, grammar, typ)
 
 """
     cross_entropy(p::CrossEntropyParams, grammar::Grammar, typ::Symbol)
 
-Expression tree optimization using cross-entropy method and probabilistic grammars
+Expression tree optimization using cross-entropy method with parameters p, probabilistic grammar 'grammar', and start symbol typ.
 """
 function cross_entropy(p::CrossEntropyParams, grammar::Grammar, typ::Symbol)
     iseval(grammar) && error("Cross-entropy does not support _() functions in the grammar")

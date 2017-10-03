@@ -1,5 +1,13 @@
 using StatsBase
 
+"""
+    PPTParams
+
+Parameters for Probabilistic Prototype Tree. 
+# Arguments:
+- `w_terminal::Float64`: probability of selecting a terminal on initialization 
+- `w_nonterm::Float64`: probability of selecting a non-terminal on initialization 
+"""
 struct PPTParams
     w_terminal::Float64
     w_nonterm::Float64
@@ -23,6 +31,11 @@ function get_child(pp::PPTParams, ppt::PPTNode, grammar::Grammar, i::Int)
     ppt.children[i]
 end
 
+"""
+    rand(pp::PPTParams, ppt::PPTNode, grammar::Grammar, typ::Symbol)
+
+Randomly sample an expression tree from ppt model using parameters pp, grammar 'grammar', and start symbol typ.
+"""
 function Base.rand(pp::PPTParams, ppt::PPTNode, grammar::Grammar, typ::Symbol)
     rules = grammar[typ]
     rule_index = sample(rules, Weights(ppt.ps[typ]))
@@ -36,6 +49,12 @@ function Base.rand(pp::PPTParams, ppt::PPTNode, grammar::Grammar, typ::Symbol)
     end
     node
 end
+
+"""
+    probability(pp::PPTParams, ppt::PPTNode, grammar::Grammar, expr::RuleNode)
+
+Compute the probability of an expression tree expr given the model ppt using parameters pp and grammar 'grammar'.
+"""
 function probability(pp::PPTParams, ppt::PPTNode, grammar::Grammar, expr::RuleNode)
     typ = return_type(grammar, expr)
     i = findfirst(grammar[typ], expr.ind)
@@ -46,6 +65,11 @@ function probability(pp::PPTParams, ppt::PPTNode, grammar::Grammar, expr::RuleNo
     retval
 end
 
+"""
+    prune!(ppt::PPTNode, grammar::Grammar, p_threshold::Float64)
+
+Prune the ppt of decisions with probability less than p_threshold.
+"""
 function prune!(ppt::PPTNode, grammar::Grammar, p_threshold::Float64)
     kmax, pmax = :None, 0.0
     for (k, p) in ppt.ps

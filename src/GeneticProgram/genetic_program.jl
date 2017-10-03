@@ -17,20 +17,18 @@ abstract type InitializationMethod end
 abstract type SelectionMethod end
 
 """
-    GeneticProgramParams(pop_size::Int, iterations::Int, max_depth::Int, 
-        p_reproduction::Float64, p_crossover::Float64, p_mutation::Float64;
-        init_method::InitializationMethod=RandomInit(), 
-        select_method::SelectionMethod=TournamentSelection())
+    GeneticProgramParams
 
 Parameters for Genetic Programming.
-    pop_size: population size
-    iterations: number of iterations
-    max_depth: maximum depth of derivation tree
-    p_reproduction: probability of reproduction operator
-    p_crossover: probability of crossover operator
-    p_mutation: probability of mutation operator
-    init_method: Initialization method
-    select_method: Initialization method
+# Arguments
+- `pop_size::Int`: population size
+- `iterations::Int`: number of iterations
+- `max_depth::Int`: maximum depth of derivation tree
+- `p_reproduction::Float64`: probability of reproduction operator
+- `p_crossover::Float64`: probability of crossover operator
+- `p_mutation::Float64`: probability of mutation operator
+- `init_method::InitializationMethod`: initialization method
+- `select_method::SelectionMethod`: selection method
 """
 struct GeneticProgramParams <: ExprOptParams
     pop_size::Int
@@ -55,22 +53,44 @@ struct GeneticProgramParams <: ExprOptParams
     end
 end
 
+"""
+    RandomInit
+
+Uniformly random initialization method.
+"""
 struct RandomInit <: InitializationMethod end
+
+"""
+    TournamentSelection
+
+Tournament selection method with tournament size k.
+"""
 struct TournamentSelection <: SelectionMethod 
-    tournament_size::Int
+    k::Int
 end
 TournamentSelection() = TournamentSelection(2)
+
+"""
+    TruncationSelection
+
+Truncation selection method keeping the top k individuals 
+"""
 struct TruncationSelection <: SelectionMethod 
-    k::Int #top k to keep
+    k::Int 
 end
 TruncationSelection() = TruncationSelection(100)
 
+"""
+    optimize(p::GeneticProgramParams, grammar::Grammar, typ::Symbol)
+
+Expression tree optimization using genetic programming with parameters p, grammar 'grammar', and start symbol typ.
+"""
 optimize(p::GeneticProgramParams, grammar::Grammar, typ::Symbol) = genetic_program(p, grammar, typ)
 
 """
     genetic_program(p::GeneticProgramParams, grammar::Grammar, typ::Symbol)
 
-Strongly-typed genetic programming optimization. See: 
+Strongly-typed genetic programming with parameters p, grammar 'grammar', and start symbol typ. See: 
 
 Montana, "Strongly-typed genetic programming", Evolutionary Computation, Vol 3, Issue 2, 1995.
 Koza, "Genetic programming: on the programming of computers by means of natural selection", MIT Press, 1992 
@@ -122,7 +142,7 @@ initialize(::RandomInit, pop_size::Int, grammar::Grammar, typ::Symbol, max_depth
 Tournament selection.
 """
 function select(p::TournamentSelection, pop::Vector{RuleNode}, losses::Vector{Float64})
-    ids = StatsBase.seqsample_c!(collect(1:length(pop)), zeros(Int, p.tournament_size)) 
+    ids = StatsBase.seqsample_c!(collect(1:length(pop)), zeros(Int, p.k)) 
     pop[ids[1]] #assume sorted
 end
 

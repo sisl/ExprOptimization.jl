@@ -11,22 +11,29 @@ import ..optimize
 export MonteCarloParams
 
 """
-    MonteCarloParams(num_samples::Int, max_depth::Int)
+    MonteCarloParams
 
 Parameters for Monte Carlo.
-    num_samples: Number of samples
-    max_depth: maximum depth of derivation tree
+# Arguments:
+- `num_samples::Int`: number of samples
+- `max_depth::Int`: maximum depth of derivation tree
 """
 struct MonteCarloParams <: ExprOptParams
     num_samples::Int
     max_depth::Int
 end
 
+"""
+    optimize(p::MonteCarloParams, grammar::Grammar, typ::Symbol)
+
+Expression tree optimization using Monte Carlo with parameters p, grammar 'grammar', and start symbol typ.
+"""
 optimize(p::MonteCarloParams, grammar::Grammar, typ::Symbol) = monte_carlo(p, grammar, typ)
 
 """
     monte_carlo(p::MonteCarloParams, grammar::Grammar, typ::Symbol)
 
+Expression tree optimization using Monte Carlo with parameters p, grammar 'grammar', and start symbol typ.
 Draw Monte Carlo samples from the grammar and return the one with the best loss.
 """
 function monte_carlo(p::MonteCarloParams, grammar::Grammar, typ::Symbol)
