@@ -14,7 +14,7 @@ The following algorithms are implemented:
 
 ## Usage
 
-Please see the [example notebook](http://nbviewer.ipython.org/github/sisl/ExprOptimization.jl/blob/master/examples/intro.ipynb).
+Please see the [example notebook](http://nbviewer.ipython.org/github/sisl/ExprOptimization.jl/blob/master/examples/example.ipynb).
 
 
 ## Maintainers:
