@@ -7,20 +7,28 @@ let
         R = |(1:3)
     end
 
-    p = PPTParams(0.75)
-    ppt = PPT.PPTNode(p, grammar)
-    
-    @test PPT.nchildren(ppt) == 0
+    function ExprOptimization.loss(node::RuleNode)
+        eval(node, grammar)
+    end
 
-    PPT.get_child(p, ppt, grammar, 1)
-    @test PPT.nchildren(ppt) == 1
-    PPT.get_child(p, ppt, grammar, 2)
-    @test PPT.nchildren(ppt) == 2
+    srand(0)
+    p = PIPEParams(PIPE.PPTParams(0.8),20,2,0.2,0.1,0.05,1,0.2,0.6,0.999,10)
+    res = optimize(p, grammar, :R)
+    @test res.expr == 1
+    @test eval(res.tree, grammar) == 1
+    @test res.loss == 1 
 
-    @test all(isapprox.(PPT.probabilities(ppt, :R), [0.1, 0.3, 0.3, 0.3]; atol=0.01))
+    iter = ExpressionIterator(grammar, 2, :R)
+    pop = collect(iter)
 
-    r = rand(p, ppt, grammar, :R)
-    PPT.probability(p, ppt, grammar, r)
-    PPT.prune!(ppt, grammar, 0.999)
+    losses = Vector{Float64}(length(pop))
+    (best_tree, best_loss) = PIPE.evaluate!(pop, losses, pop[1], Inf)
+    @test eval(best_tree, grammar) == 1
+    @test best_loss == 1
+
+    ppt = PIPE.PPTNode(p.ppt_params, grammar)
+    PIPE.update!(p, ppt, grammar, pop[1], losses[1], best_loss) 
+    PIPE.p_target(p.ppt_params, ppt, grammar, pop[1], losses[1], best_loss, p.α, p.ϵ)
+    PIPE.mutate!(ppt, grammar, pop[1], p.p_mutation, p.β)
 end
 
