@@ -114,7 +114,7 @@ function genetic_program(p::GeneticProgramParams, grammar::Grammar, typ::Symbol)
             elseif op == :crossover
                 ind1 = select(p.select_method, pop0, losses)
                 ind2 = select(p.select_method, pop0, losses)
-                child = crossover(ind1, ind2, grammar)
+                child = crossover(ind1, ind2, grammar, p.max_depth)
                 pop1[i+=1] = child
             elseif op == :mutation
                 ind1 = select(p.select_method, pop0, losses)
@@ -177,28 +177,35 @@ end
 
 Crossover genetic operator.  Pick a random node from 'a', then pick a random node from 'b' that has the same type, then replace the subtree 
 """
-function crossover(a::RuleNode, b::RuleNode, grammar::Grammar)
+function crossover(a::RuleNode, b::RuleNode, grammar::Grammar, max_depth::Int=typemax(Int))
     child = deepcopy(a)
-    loc = sample(NodeLoc, child)
-    typ = return_type(grammar, get(child, loc).ind)
-    if contains_returntype(b, grammar, typ)
-        subtree = sample(b, typ, grammar)
-        insert!(child, loc, subtree)
+    crosspoint = sample(b)
+    typ = return_type(grammar, crosspoint.ind)
+    d_subtree = depth(crosspoint)
+    d_max = max_depth + 1 - d_subtree 
+    if d_max > 0 && contains_returntype(child, grammar, typ, d_max)
+        loc = sample(NodeLoc, child, typ, grammar, d_max)
+        insert!(child, loc, deepcopy(crosspoint))
     end
     child 
 end
 
 """
-    mutation(a::RuleNode, grammar::Grammar, max_depth::Int=3)
+    mutation(a::RuleNode, grammar::Grammar, max_depth::Int=5)
 
 Mutation genetic operator.  Pick a random node from 'a', then replace the subtree with a random one.
 """
 function mutation(a::RuleNode, grammar::Grammar, max_depth::Int=5)
     child = deepcopy(a)
     loc = sample(NodeLoc, child)
-    typ = return_type(grammar, get(child, loc).ind)
-    subtree = rand(RuleNode, grammar, typ)
-    insert!(child, loc, subtree)
+    mutatepoint = get(child, loc) 
+    typ = return_type(grammar, mutatepoint.ind)
+    d_node = node_depth(child, mutatepoint)
+    d_max = max_depth + 1 - d_node
+    if d_max > 0
+        subtree = rand(RuleNode, grammar, typ, d_max)
+        insert!(child, loc, subtree)
+    end
     child
 end
 
