@@ -76,7 +76,7 @@ end
 
 Update the probability vectors based on population using MLE.
 """
-function fit_mle!(pcfg::ProbabilisticGrammar, pop::AbstractVector{RuleNode}; initial_value::Float64=0.0)
+function fit_mle!(pcfg::ProbabilisticGrammar, pop::AbstractVector{RuleNode}, initial_value::Float64=0.0)
     fill!(pcfg, initial_value)
     for x in pop
         _fit_mle!(pcfg, x)

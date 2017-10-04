@@ -22,6 +22,7 @@ Parameters for Cross Entropy method.
 - `iiterations::Int`: number of iterations
 - `max_depth::Int`: maximum depth of derivation tree
 - `top_k::Int`: top k elite samples used in selection
+- `p_init::Float64`: initial value when fitting MLE 
 - `init_method::InitializationMethod`: Initialization method
 """
 struct CrossEntropyParams <: ExprOptParams
@@ -29,6 +30,7 @@ struct CrossEntropyParams <: ExprOptParams
     iterations::Int                                     
     max_depth::Int                                      
     top_k::Int                                          
+    p_init::Float64
     init_method::InitializationMethod
 
     function CrossEntropyParams(
@@ -36,9 +38,10 @@ struct CrossEntropyParams <: ExprOptParams
         iterations::Int,                                #number of iterations
         max_depth::Int,                                 #maximum depth of derivation tree
         top_k::Int,                                     #top k elite samples used in selection
+        p_init::Float64=0.0,                            #initial value when fitting MLE
         init_method::InitializationMethod=RandomInit()) #initialization method 
 
-        new(pop_size, iterations, max_depth, top_k, init_method)
+        new(pop_size, iterations, max_depth, top_k, p_init, init_method)
     end
 end
 
@@ -73,7 +76,7 @@ function cross_entropy(p::CrossEntropyParams, grammar::Grammar, typ::Symbol)
         for i in eachindex(pop)
             pop[i] = rand(RuleNode, pcfg, typ, p.max_depth)
         end
-        fit_mle!(pcfg, pop[1:p.top_k])
+        fit_mle!(pcfg, pop[1:p.top_k], p.p_init)
         best_tree, best_loss = evaluate!(pop, losses, best_tree, best_loss)
     end
     ExprOptResults(best_tree, best_loss, get_executable(best_tree, grammar), nothing)
