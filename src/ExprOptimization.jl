@@ -24,6 +24,9 @@ export
         GeneticProgram,
         GeneticProgramParams,
 
+        GrammaticalEvolution,
+        GrammaticalEvolutionParams,
+
         CrossEntropy,
         CrossEntropyParams,
 
@@ -73,6 +76,9 @@ using .MonteCarlo
 
 include("GeneticProgram/genetic_program.jl")
 using .GeneticProgram
+
+include("GrammaticalEvolution/grammatical_evolution.jl")
+using .GrammaticalEvolution
 
 include("CrossEntropy/cross_entropy.jl")
 using .CrossEntropy

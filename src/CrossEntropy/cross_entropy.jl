@@ -55,20 +55,23 @@ struct RandomInit <: InitializationMethod end
 """
     optimize(p::CrossEntropyParams, grammar::Grammar, typ::Symbol)
 
-Expression tree optimization using the cross-entropy method with parameters p, probabilistic grammar 'grammar', and start symbol typ.
+Expression tree optimization using the cross-entropy method with parameters p, grammar 'grammar', and start symbol typ.
+
+See: Rubinstein, "Optimization of Computer Simulation Models with Rare Events", European Journal of Operations Research, 99, 89-112, 1197
 """
 optimize(p::CrossEntropyParams, grammar::Grammar, typ::Symbol) = cross_entropy(p, grammar, typ)
 
 """
     cross_entropy(p::CrossEntropyParams, grammar::Grammar, typ::Symbol)
 
-Expression tree optimization using cross-entropy method with parameters p, probabilistic grammar 'grammar', and start symbol typ.
+Expression tree optimization using cross-entropy method with parameters p, grammar 'grammar', and start symbol typ.
+
+See: Rubinstein, "Optimization of Computer Simulation Models with Rare Events", European Journal of Operations Research, 99, 89-112, 1197
 """
 function cross_entropy(p::CrossEntropyParams, grammar::Grammar, typ::Symbol)
     iseval(grammar) && error("Cross-entropy does not support _() functions in the grammar")
 
     losses = Vector{Float64}(p.pop_size)
-
     pcfg = ProbabilisticGrammar(grammar)
     pop = initialize(p.init_method, p.pop_size, pcfg, typ, p.max_depth)
     best_tree, best_loss = evaluate!(pop, losses, RuleNode(0), Inf)
