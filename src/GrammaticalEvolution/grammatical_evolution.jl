@@ -21,17 +21,17 @@ abstract type MutationMethod end
 
 Parameters for Grammatical Evolution.
 # Arguments
-    - `grammar::Grammar`: grammar
-    - `typ::Symbol`: start symbol
-    - `pop_size::Int`: population size
-    - `iterations::Int`: number of iterations
-    - `gene_length::Int`: length of genotype integer array
-    - `max_depth::Int`: maximum depth of derivation tree
-    - `p_reproduction::Float64`: probability of reproduction operator
-    - `p_crossover::Float64`: probability of crossover operator
-    - `p_mutation::Float64`: probability of mutation operator
-    - `select_method::SelectionMethod`: selection method (default: tournament selection)
-    - `mutate_method::InitializationMethod`: mutation method (default: multi-mutate)
+- `grammar::Grammar`: grammar
+- `typ::Symbol`: start symbol
+- `pop_size::Int`: population size
+- `iterations::Int`: number of iterations
+- `gene_length::Int`: length of genotype integer array
+- `max_depth::Int`: maximum depth of derivation tree
+- `p_reproduction::Float64`: probability of reproduction operator
+- `p_crossover::Float64`: probability of crossover operator
+- `p_mutation::Float64`: probability of mutation operator
+- `select_method::SelectionMethod`: selection method (default: tournament selection)
+- `mutate_method::InitializationMethod`: mutation method (default: multi-mutate)
 """
 struct GrammaticalEvolutionParams <: ExprOptParams
     pop_size::Int
