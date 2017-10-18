@@ -17,11 +17,21 @@ abstract type SelectionMethod end
 abstract type MutationMethod end
 
 """
-    GrammaticalEvolutionParams(num_samples::Int, max_depth::Int)
+    GrammaticalEvolutionParams
 
-Parameters for Monte Carlo.
-    num_samples: Number of samples
-    max_depth: maximum depth of derivation tree
+Parameters for Grammatical Evolution.
+# Arguments
+    - `grammar::Grammar`: grammar
+    - `typ::Symbol`: start symbol
+    - `pop_size::Int`: population size
+    - `iterations::Int`: number of iterations
+    - `gene_length::Int`: length of genotype integer array
+    - `max_depth::Int`: maximum depth of derivation tree
+    - `p_reproduction::Float64`: probability of reproduction operator
+    - `p_crossover::Float64`: probability of crossover operator
+    - `p_mutation::Float64`: probability of mutation operator
+    - `select_method::SelectionMethod`: selection method (default: tournament selection)
+    - `mutate_method::InitializationMethod`: mutation method (default: multi-mutate)
 """
 struct GrammaticalEvolutionParams <: ExprOptParams
     pop_size::Int
@@ -43,10 +53,7 @@ struct GrammaticalEvolutionParams <: ExprOptParams
         p_crossover::Float64,                   #probability of crossover operator
         p_mutation::Float64;                    #probability of mutation operator 
         select_method::SelectionMethod=TournamentSelection(),   #selection method 
-        mutate_method::MutationMethod=MultiMutate([
-                                                   RandomMutation(0.1),
-                                                   GeneDuplication(),
-                                                   GenePruning(0.1, grammar, typ) ]))
+        mutate_method::MutationMethod=MultiMutate(grammar, typ))
         
         p_operators = Weights([p_reproduction, p_crossover, p_mutation])
         new(pop_size, iterations, gene_length, max_depth, p_operators, select_method, mutate_method)
@@ -73,28 +80,55 @@ struct TruncationSelection <: SelectionMethod
 end
 TruncationSelection() = TruncationSelection(100)
 
+"""
+    RandomMutation
+
+Randomly change each entry in integer array with probability p_mutate
+"""
 struct RandomMutation <: MutationMethod
     p_mutate::Float64
 end
+RandomMutation() = RandomMutation(0.1)
 
+"""
+    GeneDuplication
+
+Pick a random segment of the gene and duplicate it at the end.
+"""
 struct GeneDuplication <: MutationMethod end
 
+"""
+    GenePruning
+
+With probability p_prune, decode the gene using grammar and start symbol typ and discard the genes not used.
+"""
 struct GenePruning <: MutationMethod
     p_prune::Float64
     grammar::Grammar
     typ::Symbol
 end
+GenePruning(grammar::Grammar, typ::Symbol) = GenePruning(0.1, grammar, typ)
 
+"""
+    MultiMutate
+
+Apply a sequence of mutation operators.
+"""
 struct MultiMutate <: MutationMethod
     Ms::Vector{MutationMethod} 
 end
+MultiMutate(grammar::Grammar, typ::Symbol) = MultiMutate([
+    RandomMutation(), 
+    GeneDuplication(), 
+    GenePruning(grammar, typ)])
 
 """
     optimize(p::GrammaticalEvolutionParams, grammar::Grammar, typ::Symbol)
 
 Grammatical Evolution algorithm with parameters p, grammar 'grammar', and start symbol typ.
 
-See: Ryan, O'Neil...
+See: Ryan, Collins, O'Neil, "Grammatical Evolution: Evolving Programs for an Arbitrary Language", 
+    in European Conference on Genetic Programming, Spring, 1998, pp. 83-96. 
 """
 optimize(p::GrammaticalEvolutionParams, grammar::Grammar, typ::Symbol) = grammatical_evolution(p, grammar, typ)
 
@@ -103,7 +137,8 @@ optimize(p::GrammaticalEvolutionParams, grammar::Grammar, typ::Symbol) = grammat
 
 Grammatical Evolution algorithm with parameters p, grammar 'grammar', and start symbol typ.
 
-See: Ryan, O'Neil...
+See: Ryan, Collins, O'Neil, "Grammatical Evolution: Evolving Programs for an Arbitrary Language", 
+    in European Conference on Genetic Programming, Spring, 1998, pp. 83-96. 
 """
 function grammatical_evolution(p::GrammaticalEvolutionParams, grammar::Grammar, typ::Symbol)
     iseval(grammar) && error("Grammatical Evolution does not support _() functions in the grammar")
@@ -139,8 +174,18 @@ function grammatical_evolution(p::GrammaticalEvolutionParams, grammar::Grammar, 
     ExprOptResults(best_tree, best_loss, get_executable(best_tree, grammar), nothing)
 end
 
+"""
+    initialize(pop_size::Int, len::Int)
+
+Randomly initialize population.
+"""
 initialize(pop_size::Int, len::Int) = [rand(Int, len) for i = 1:pop_size]
 
+"""
+    limit_length!(ind::Vector{Int}, max_length::Int)
+
+Limit the length of the gene ind to max_length.
+"""
 function limit_length!(ind::Vector{Int}, max_length::Int)
     resize!(ind, min(length(ind), max_length))
     ind
@@ -176,9 +221,9 @@ function crossover(a::Vector{Int}, b::Vector{Int})
 end
 
 """
-    mutate!(::RandomMutation, a::Vector{Int})
+    mutation(::RandomMutation, a::Vector{Int})
 
-Mutation genetic operator.  Pick a random point from 'a', then...
+Mutation the gene using RandomMutation.  Randomly change each entry in integer array with probability p_mutate
 """
 function mutation(p::RandomMutation, a::Vector{Int})
     child = deepcopy(a)
@@ -189,6 +234,12 @@ function mutation(p::RandomMutation, a::Vector{Int})
     end
     return child 
 end
+
+"""
+    mutation(p::GeneDuplication, a::Vector{Int})
+
+Mutate the gene using GeneDuplication.  Pick a random segment of the gene and duplicate it at the end.
+"""
 function mutation(p::GeneDuplication, a::Vector{Int})
     child = a
     n = length(a)
@@ -196,6 +247,12 @@ function mutation(p::GeneDuplication, a::Vector{Int})
     interval = min(i,j) : max(i,j)
     return vcat(child, child[interval])
 end
+
+"""
+    mutation(p::GenePruning, a::Vector{Int})
+
+Mutate the gene using GenePruning.  With probability p_prune, decodes the gene and discards the genes not used.
+"""
 function mutation(p::GenePruning, a::Vector{Int})
     child = deepcopy(a)
     if rand() < p.p_prune
@@ -206,6 +263,12 @@ function mutation(p::GenePruning, a::Vector{Int})
     end
     return child 
 end
+
+"""
+    mutation(p::MultiMutate, a::Vector{Int})
+
+Mutate the gene using MultiMutate.  Apply a sequence of mutation operators.
+"""
 function mutation(p::MultiMutate, child::Vector{Int})
     for m in p.Ms
         child = mutation(m, child)
@@ -235,10 +298,21 @@ function evaluate!(p::GrammaticalEvolutionParams, grammar::Grammar, typ::Symbol,
     (best_tree, best_loss)
 end
 
+"""
+    DecodedExpression
+
+Results of a decode operation.  The decoded expression tree is stored in node and the number of rule is in n_rule_applied.
+"""
 struct DecodedExpression
     node::RuleNode
     n_rules_applied::Int
 end
+
+"""
+    decode(x::Vector{Int}, grammar::Grammar, typ::Symbol, c_max=1000, c=0)
+
+Decode an integer array (genotype) to a derivation tree (phenotype) using given grammar and start symbol typ.  Unlimited wraps.
+"""
 function decode(x::Vector{Int}, grammar::Grammar, typ::Symbol, c_max=1000, c=0)
     node, c = _decode(x, grammar, typ, c_max, c)
     DecodedExpression(node, c)
