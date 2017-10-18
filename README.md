@@ -5,6 +5,7 @@ Algorithms for the optimization of Julia expressions derived from a grammar.
 The following algorithms are implemented:
 * Monte Carlo
 * Genetic Programming
+* Grammatical Evolution
 * Cross-Entropy Method
 * Probabilistic Incremental Program Execution (PIPE)
 
