@@ -18,17 +18,16 @@ let
     @test eval(res.tree, grammar) == 1
     @test res.loss == 1 
 
-    iter = ExpressionIterator(grammar, 2, :R)
-    pop = collect(iter)
+    pop = GrammaticalEvolution.initialize(p.pop_size, p.gene_length)
+    node = GrammaticalEvolution.decode(pop[1], grammar, :R).node
 
     losses = Vector{Float64}(length(pop))
-    (best_tree, best_loss) = GrammaticalEvolution.evaluate!(pop, losses, pop[1], Inf)
+    (best_tree, best_loss) = GrammaticalEvolution.evaluate!(p, grammar, :R, pop, losses, node, Inf)
     @test eval(best_tree, grammar) == 1
     @test best_loss == 1
 
-    GrammaticalEvolution.decode(pop[1], grammar, :R)
     GrammaticalEvolution.select(p.select_method, pop, losses)
-    GrammaticalEvolution.crossover(pop[1], pop[2],  grammar)
-    GrammaticalEvolution.mutation(MultiMutate(grammar, :R), pop[3], grammar)
+    GrammaticalEvolution.crossover(pop[1], pop[2])
+    GrammaticalEvolution.mutation(GrammaticalEvolution.MultiMutate(grammar, :R), pop[3])
 end
 
