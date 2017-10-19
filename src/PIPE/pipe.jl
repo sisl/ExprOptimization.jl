@@ -5,7 +5,7 @@ using ExprRules, StatsBase
 using ..PPT
 using ..loss
 using ..ExprOptParams
-using ..ExprOptResults
+using ..ExprOptResult
 
 import ..optimize
 
@@ -78,7 +78,7 @@ function pipe(p::PIPEParams, grammar::Grammar, typ::Symbol)
             prune!(ppt, grammar, p.p_threshold)
         end
     end
-    ExprOptResults(best_tree, best_loss, get_executable(best_tree, grammar), nothing)
+    ExprOptResult(best_tree, best_loss, get_executable(best_tree, grammar), nothing)
 end
 
 """

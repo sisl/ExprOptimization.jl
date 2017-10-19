@@ -5,7 +5,7 @@ using ExprRules
 using ..ProbabilisticExprRules
 using ..loss
 using ..ExprOptParams
-using ..ExprOptResults
+using ..ExprOptResult
 
 import ..optimize
 
@@ -82,7 +82,7 @@ function cross_entropy(p::CrossEntropyParams, grammar::Grammar, typ::Symbol)
         fit_mle!(pcfg, pop[1:p.top_k], p.p_init)
         best_tree, best_loss = evaluate!(pop, losses, best_tree, best_loss)
     end
-    ExprOptResults(best_tree, best_loss, get_executable(best_tree, grammar), nothing)
+    ExprOptResult(best_tree, best_loss, get_executable(best_tree, grammar), nothing)
 end
 
 """

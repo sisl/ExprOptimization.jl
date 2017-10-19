@@ -12,7 +12,7 @@ export
 
         loss,
         optimize,
-        ExprOptResults,
+        ExprOptResult,
 
         ProbabilisticExprRules,
         PPT,
@@ -36,15 +36,15 @@ export
 abstract type ExprOptParams end
 
 """
-    ExprOptResults
+    ExprOptResult
 
 Returned by optimize().  Contains the results of the optimization.
 """
-struct ExprOptResults
+struct ExprOptResult
     tree::RuleNode #best tree
     loss::Float64 #best loss
     expr::Any #best expression
-    alg_results::Any #algorithm-specific results
+    alg_result::Any #algorithm-specific results
 end
 
 """

@@ -4,7 +4,7 @@ module MonteCarlo
 using ExprRules
 using ..loss
 using ..ExprOptParams
-using ..ExprOptResults
+using ..ExprOptResult
 
 import ..optimize
 
@@ -45,7 +45,7 @@ function monte_carlo(p::MonteCarloParams, grammar::Grammar, typ::Symbol)
             best_tree, best_loss = tree, los
         end
     end
-    ExprOptResults(best_tree, best_loss, get_executable(best_tree, grammar), nothing)
+    ExprOptResult(best_tree, best_loss, get_executable(best_tree, grammar), nothing)
 end
 
 end #module

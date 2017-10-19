@@ -5,7 +5,7 @@ using ExprRules
 using StatsBase
 using ..loss
 using ..ExprOptParams
-using ..ExprOptResults
+using ..ExprOptResult
 
 import ..optimize
 
@@ -125,7 +125,7 @@ function genetic_program(p::GeneticProgramParams, grammar::Grammar, typ::Symbol)
         pop0, pop1 = pop1, pop0
         best_tree, best_loss = evaluate!(pop0, losses, best_tree, best_loss)
     end
-    ExprOptResults(best_tree, best_loss, get_executable(best_tree, grammar), nothing)
+    ExprOptResult(best_tree, best_loss, get_executable(best_tree, grammar), nothing)
 end
 
 """
