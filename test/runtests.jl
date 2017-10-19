@@ -6,5 +6,6 @@ include("ppt_test.jl")
 
 include("montecarlo_test.jl")
 include("gp_test.jl")
+include("ge_test.jl")
 include("ce_test.jl")
 include("pipe_test.jl")
