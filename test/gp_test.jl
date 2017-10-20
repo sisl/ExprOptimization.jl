@@ -7,13 +7,13 @@ let
         R = |(1:2)
     end
 
-    function ExprOptimization.loss(node::RuleNode)
+    function loss(node::RuleNode)
         eval(node, grammar)
     end
 
     srand(0)
     p = GeneticProgramParams(10, 5, 4, 0.3, 0.3, 0.3)
-    res = optimize(p, grammar, :R)
+    res = optimize(p, grammar, :R, loss)
     @test res.expr == 1
     @test eval(res.tree, grammar) == 1
     @test res.loss == 1 
@@ -22,7 +22,7 @@ let
     pop = collect(iter)
 
     losses = Vector{Float64}(length(pop))
-    (best_tree, best_loss) = GeneticProgram.evaluate!(pop, losses, pop[1], Inf)
+    (best_tree, best_loss) = GeneticProgram.evaluate!(loss, pop, losses, pop[1], Inf)
     @test eval(best_tree, grammar) == 1
     @test best_loss == 1
 

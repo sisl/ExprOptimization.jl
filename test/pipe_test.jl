@@ -7,13 +7,13 @@ let
         R = |(1:3)
     end
 
-    function ExprOptimization.loss(node::RuleNode)
+    function loss(node::RuleNode)
         eval(node, grammar)
     end
 
     srand(0)
     p = PIPEParams(PIPE.PPTParams(0.8),20,2,0.2,0.1,0.05,1,0.2,0.6,0.999,10)
-    res = optimize(p, grammar, :R)
+    res = optimize(p, grammar, :R, loss)
     @test res.expr == 1
     @test eval(res.tree, grammar) == 1
     @test res.loss == 1 
@@ -22,7 +22,7 @@ let
     pop = collect(iter)
 
     losses = Vector{Float64}(length(pop))
-    (best_tree, best_loss) = PIPE.evaluate!(pop, losses, pop[1], Inf)
+    (best_tree, best_loss) = PIPE.evaluate!(loss, pop, losses, pop[1], Inf)
     @test eval(best_tree, grammar) == 1
     @test best_loss == 1
 

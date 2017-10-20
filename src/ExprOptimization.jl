@@ -10,7 +10,6 @@ export
         RuleNode,
         get_executable,
 
-        loss,
         optimize,
         ExprOptResult,
 
@@ -48,16 +47,9 @@ struct ExprOptResult
 end
 
 """
-    loss(tree::RuleNode)
+    optimize(p::ExprOptParams, grammar::Grammar, typ::Symbol, loss::Function)
 
-User-defined loss function.  Should be overloaded by user.  Takes an expression tree and returns a real number.  The loss is minimized by the optimization algorithms.
-"""
-function loss end       #loss function, loss(tree::RuleNode), implemented by user
-
-"""
-    optimize(p::ExprOptParams, grammar::Grammar, typ::Symbol)
-
-Main entry for expression optimization.  Use concrete ExprOptParams to specify optimization algorithm. Optimize using grammar and start symbol, typ.
+Main entry for expression optimization.  Use concrete ExprOptParams to specify optimization algorithm. Optimize using grammar and start symbol, typ, and loss function.  Loss function has the form: los::Float64=loss(node::RuleNode).
 """
 function optimize end   #implemented by algorithms
 

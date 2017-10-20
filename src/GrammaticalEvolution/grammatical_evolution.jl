@@ -3,7 +3,6 @@ module GrammaticalEvolution
 
 using ExprRules
 using StatsBase
-using ..loss
 using ..ExprOptParams
 using ..ExprOptResult
 
@@ -123,31 +122,32 @@ MultiMutate(grammar::Grammar, typ::Symbol) = MultiMutate([
     GenePruning(grammar, typ)])
 
 """
-    optimize(p::GrammaticalEvolutionParams, grammar::Grammar, typ::Symbol)
+    optimize(p::GrammaticalEvolutionParams, grammar::Grammar, typ::Symbol, loss::Function)
 
-Grammatical Evolution algorithm with parameters p, grammar 'grammar', and start symbol typ.
-
-See: Ryan, Collins, O'Neil, "Grammatical Evolution: Evolving Programs for an Arbitrary Language", 
-    in European Conference on Genetic Programming, Spring, 1998, pp. 83-96. 
-"""
-optimize(p::GrammaticalEvolutionParams, grammar::Grammar, typ::Symbol) = grammatical_evolution(p, grammar, typ)
-
-"""
-    grammatical_evolution(p::GrammaticalEvolutionParams, grammar::Grammar, typ::Symbol)
-
-Grammatical Evolution algorithm with parameters p, grammar 'grammar', and start symbol typ.
+Grammatical Evolution algorithm with parameters p, grammar 'grammar', start symbol typ, and loss function 'loss'.  Loss function has the form: los::Float64=loss(node::RuleNode).
 
 See: Ryan, Collins, O'Neil, "Grammatical Evolution: Evolving Programs for an Arbitrary Language", 
     in European Conference on Genetic Programming, Spring, 1998, pp. 83-96. 
 """
-function grammatical_evolution(p::GrammaticalEvolutionParams, grammar::Grammar, typ::Symbol)
+optimize(p::GrammaticalEvolutionParams, grammar::Grammar, typ::Symbol, loss::Function) = 
+    grammatical_evolution(p, grammar, typ, loss)
+
+"""
+    grammatical_evolution(p::GrammaticalEvolutionParams, grammar::Grammar, typ::Symbol, loss::Function)
+
+Grammatical Evolution algorithm with parameters p, grammar 'grammar', start symbol typ, and loss function 'loss'.  Loss function has the form los::Float64=loss(node::RuleNode).
+
+See: Ryan, Collins, O'Neil, "Grammatical Evolution: Evolving Programs for an Arbitrary Language", 
+    in European Conference on Genetic Programming, Spring, 1998, pp. 83-96. 
+"""
+function grammatical_evolution(p::GrammaticalEvolutionParams, grammar::Grammar, typ::Symbol, loss::Function)
     iseval(grammar) && error("Grammatical Evolution does not support _() functions in the grammar")
 
     pop0 = initialize(p.pop_size, p.gene_length) 
     pop1 = [Int[] for i=1:p.pop_size]
     losses = Vector{Float64}(p.pop_size)
 
-    best_tree, best_loss = evaluate!(p, grammar, typ, pop0, losses, RuleNode(0), Inf)
+    best_tree, best_loss = evaluate!(p, grammar, typ, loss, pop0, losses, RuleNode(0), Inf)
     for iter = 1:p.iterations 
         i = 0
         while i < p.pop_size
@@ -169,7 +169,7 @@ function grammatical_evolution(p::GrammaticalEvolutionParams, grammar::Grammar, 
             end
         end
         pop0, pop1 = pop1, pop0
-        best_tree, best_loss = evaluate!(p, grammar, typ, pop0, losses, best_tree, best_loss)
+        best_tree, best_loss = evaluate!(p, grammar, typ, loss, pop0, losses, best_tree, best_loss)
     end
     ExprOptResult(best_tree, best_loss, get_executable(best_tree, grammar), nothing)
 end
@@ -277,11 +277,11 @@ function mutation(p::MultiMutate, child::Vector{Int})
 end
 
 """
-    evaluate!(pop::Vector{RuleNode}, losses::Vector{Float64}, best_tree::RuleNode, best_loss::Float64)
+    evaluate!(p::GrammaticalEvolutionParams, grammar::Grammar, typ::Symbol, loss::Function, pop::Vector{RuleNode}, losses::Vector{Float64}, best_tree::RuleNode, best_loss::Float64)
 
 Evaluate the loss function for population and sort.  Update the globally best tree, if needed.
 """
-function evaluate!(p::GrammaticalEvolutionParams, grammar::Grammar, typ::Symbol, 
+function evaluate!(p::GrammaticalEvolutionParams, grammar::Grammar, typ::Symbol, loss::Function,
                    pop::Vector{Vector{Int}}, losses::Vector{Float64}, best_tree::RuleNode, 
                    best_loss::Float64)
 

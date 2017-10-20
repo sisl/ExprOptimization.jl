@@ -3,7 +3,6 @@ module PIPE
 
 using ExprRules, StatsBase
 using ..PPT
-using ..loss
 using ..ExprOptParams
 using ..ExprOptResult
 
@@ -43,20 +42,21 @@ struct PIPEParams <: ExprOptParams
 end
 
 """
-    optimize(p::PIPEParams, grammar::Grammar, typ::Symbol)
+    optimize(p::PIPEParams, grammar::Grammar, typ::Symbol, loss::Function)
 
-Expression tree optimization using the PIPE algorithm with parameters p, grammar 'grammar', and start symbol typ.
+Expression tree optimization using the PIPE algorithm with parameters p, grammar 'grammar', start symbol typ, and loss function 'loss'.  Loss function has the form: los::Float64=loss(node::RuleNode).
 """
-optimize(p::PIPEParams, grammar::Grammar, typ::Symbol) = pipe(p, grammar, typ)
+optimize(p::PIPEParams, grammar::Grammar, typ::Symbol, loss::Function) = pipe(p, grammar, typ, loss)
 
 """
-    pipe(p::PIPEParams, grammar::Grammar, typ::Symbol)
+    pipe(p::PIPEParams, grammar::Grammar, typ::Symbol, loss::Function)
 
-Probabilistic Incremental Program Evolution (PIPE) optimization algorithm with parameters p, grammar 'grammar', and start symbol typ..
+Probabilistic Incremental Program Evolution (PIPE) optimization algorithm with parameters p, grammar 'grammar', start symbol typ, and loss function 'loss'.  Loss function has the form: los::Float64=loss(node::RuleNode).
+
 Reference: R. Salustowicz and J. Schmidhuber, "Probabilistic Incremental Program Evolution", 
     Evolutionary Computation, vol. 5, no. 2, pp. 123-141, 1997.
 """
-function pipe(p::PIPEParams, grammar::Grammar, typ::Symbol)
+function pipe(p::PIPEParams, grammar::Grammar, typ::Symbol, loss::Function)
     iseval(grammar) && error("PIPE does not support _() functions in the grammar")
 
     best_tree, best_loss = RuleNode(0), Inf
@@ -72,7 +72,7 @@ function pipe(p::PIPEParams, grammar::Grammar, typ::Symbol)
             for j = 1:p.pop_size
                 pop[j] = rand(pp, ppt, grammar, typ)
             end
-            best_tree, best_loss = evaluate!(pop, losses, best_tree, best_loss)
+            best_tree, best_loss = evaluate!(loss, pop, losses, best_tree, best_loss)
             update!(p, ppt, grammar, pop[1], losses[1], best_loss) 
             mutate!(ppt, grammar, pop[1], p.p_mutation, p.β)
             prune!(ppt, grammar, p.p_threshold)
@@ -152,11 +152,11 @@ function mutate!(ppt::PPTNode, grammar::Grammar, x_best::RuleNode, p_mutation::F
 end
 
 """
-    evaluate!(pop::Vector{RuleNode}, losses::Vector{Float64}, best_tree::RuleNode, best_loss::Float64)
+    evaluate!(loss::Function, pop::Vector{RuleNode}, losses::Vector{Float64}, best_tree::RuleNode, best_loss::Float64)
 
 Evaluate the loss function for population and sort.  Update the globally best tree.
 """
-function evaluate!(pop::Vector{RuleNode}, losses::Vector{Float64}, best_tree::RuleNode, 
+function evaluate!(loss::Function, pop::Vector{RuleNode}, losses::Vector{Float64}, best_tree::RuleNode, 
     best_loss::Float64)
 
     losses[:] = loss.(pop)
