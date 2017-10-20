@@ -124,7 +124,7 @@ MultiMutate(grammar::Grammar, typ::Symbol) = MultiMutate([
 """
     optimize(p::GrammaticalEvolutionParams, grammar::Grammar, typ::Symbol, loss::Function)
 
-Grammatical Evolution algorithm with parameters p, grammar 'grammar', start symbol typ, and loss function 'loss'.  Loss function has the form: los::Float64=loss(node::RuleNode).
+Grammatical Evolution algorithm with parameters p, grammar 'grammar', start symbol typ, and loss function 'loss'.  Loss function has the form: los::Float64=loss(node::RuleNode, grammar::Grammar).
 
 See: Ryan, Collins, O'Neil, "Grammatical Evolution: Evolving Programs for an Arbitrary Language", 
     in European Conference on Genetic Programming, Spring, 1998, pp. 83-96. 
@@ -135,7 +135,7 @@ optimize(p::GrammaticalEvolutionParams, grammar::Grammar, typ::Symbol, loss::Fun
 """
     grammatical_evolution(p::GrammaticalEvolutionParams, grammar::Grammar, typ::Symbol, loss::Function)
 
-Grammatical Evolution algorithm with parameters p, grammar 'grammar', start symbol typ, and loss function 'loss'.  Loss function has the form los::Float64=loss(node::RuleNode).
+Grammatical Evolution algorithm with parameters p, grammar 'grammar', start symbol typ, and loss function 'loss'.  Loss function has the form los::Float64=loss(node::RuleNode, grammar::Grammar).
 
 See: Ryan, Collins, O'Neil, "Grammatical Evolution: Evolving Programs for an Arbitrary Language", 
     in European Conference on Genetic Programming, Spring, 1998, pp. 83-96. 
@@ -287,7 +287,7 @@ function evaluate!(p::GrammaticalEvolutionParams, grammar::Grammar, typ::Symbol,
 
     for i in eachindex(losses)
         decoded = decode(pop[i], grammar, typ)
-        losses[i] = depth(decoded.node) > p.max_depth ?  Inf : loss(decoded.node)
+        losses[i] = depth(decoded.node) > p.max_depth ?  Inf : loss(decoded.node, grammar)
     end
     perm = sortperm(losses)
     pop[:], losses[:] = pop[perm], losses[perm]

@@ -82,14 +82,14 @@ TruncationSelection() = TruncationSelection(100)
 """
     optimize(p::GeneticProgramParams, grammar::Grammar, typ::Symbol, loss::Function)
 
-Expression tree optimization using genetic programming with parameters p, grammar 'grammar', and start symbol typ, and loss function 'loss'.  Loss function has the form: los::Float64=loss(node::RuleNode).
+Expression tree optimization using genetic programming with parameters p, grammar 'grammar', and start symbol typ, and loss function 'loss'.  Loss function has the form: los::Float64=loss(node::RuleNode, grammar::Grammar).
 """
 optimize(p::GeneticProgramParams, grammar::Grammar, typ::Symbol, loss::Function) = genetic_program(p, grammar, typ, loss)
 
 """
     genetic_program(p::GeneticProgramParams, grammar::Grammar, typ::Symbol, loss::Function)
 
-Strongly-typed genetic programming with parameters p, grammar 'grammar', start symbol typ, and loss function 'loss'. Loss funciton has the form: los::Float64=loss(node::RuleNode). 
+Strongly-typed genetic programming with parameters p, grammar 'grammar', start symbol typ, and loss function 'loss'. Loss funciton has the form: los::Float64=loss(node::RuleNode, grammar::Grammar). 
     
 See: Montana, "Strongly-typed genetic programming", Evolutionary Computation, Vol 3, Issue 2, 1995.
 Koza, "Genetic programming: on the programming of computers by means of natural selection", MIT Press, 1992 
@@ -102,7 +102,7 @@ function genetic_program(p::GeneticProgramParams, grammar::Grammar, typ::Symbol,
     pop1 = Vector{RuleNode}(p.pop_size)
     losses = Vector{Float64}(p.pop_size)
 
-    best_tree, best_loss = evaluate!(loss, pop0, losses, pop0[1], Inf)
+    best_tree, best_loss = evaluate!(loss, grammar, pop0, losses, pop0[1], Inf)
     for iter = 1:p.iterations 
         i = 0
         while i < p.pop_size
@@ -122,7 +122,7 @@ function genetic_program(p::GeneticProgramParams, grammar::Grammar, typ::Symbol,
             end
         end
         pop0, pop1 = pop1, pop0
-        best_tree, best_loss = evaluate!(loss, pop0, losses, best_tree, best_loss)
+        best_tree, best_loss = evaluate!(loss, grammar, pop0, losses, best_tree, best_loss)
     end
     ExprOptResult(best_tree, best_loss, get_executable(best_tree, grammar), nothing)
 end
@@ -155,14 +155,15 @@ function select(p::TruncationSelection, pop::Vector{RuleNode}, losses::Vector{Fl
 end
 
 """
-    evaluate!(loss::Function, pop::Vector{RuleNode}, losses::Vector{Float64}, best_tree::RuleNode, best_loss::Float64)
+    evaluate!(loss::Function, grammar::Grammar, pop::Vector{RuleNode}, losses::Vector{Float64}, 
+        best_tree::RuleNode, best_loss::Float64)
 
 Evaluate the loss function for population and sort.  Update the globally best tree, if needed.
 """
-function evaluate!(loss::Function, pop::Vector{RuleNode}, losses::Vector{Float64}, best_tree::RuleNode, 
-    best_loss::Float64)
+function evaluate!(loss::Function, grammar::Grammar, pop::Vector{RuleNode}, losses::Vector{Float64}, 
+                   best_tree::RuleNode, best_loss::Float64)
 
-    losses[:] = loss.(pop)
+    losses[:] = loss.(pop, grammar)
     perm = sortperm(losses)
     pop[:], losses[:] = pop[perm], losses[perm]
     if losses[1] < best_loss

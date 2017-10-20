@@ -7,7 +7,7 @@ let
         R = |(1:3)
     end
 
-    function loss(node::RuleNode)
+    function loss(node::RuleNode, grammar::Grammar)
         eval(node, grammar)
     end
 
@@ -22,7 +22,7 @@ let
     pop = collect(iter)
 
     losses = Vector{Float64}(length(pop))
-    (best_tree, best_loss) = PIPE.evaluate!(loss, pop, losses, pop[1], Inf)
+    (best_tree, best_loss) = PIPE.evaluate!(loss, grammar, pop, losses, pop[1], Inf)
     @test eval(best_tree, grammar) == 1
     @test best_loss == 1
 

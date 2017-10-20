@@ -7,7 +7,7 @@ let
         R = R + R
     end
 
-    function loss(node::RuleNode)
+    function loss(node::RuleNode, grammar::Grammar)
         eval(node, grammar)
     end
 

@@ -54,7 +54,7 @@ struct RandomInit <: InitializationMethod end
 """
     optimize(p::CrossEntropyParams, grammar::Grammar, typ::Symbol, loss::Function)
 
-Expression tree optimization using the cross-entropy method with parameters p, grammar 'grammar', and start symbol typ, and loss function 'loss'.  Loss function has the form: los::Float64=loss(node::RuleNode)
+Expression tree optimization using the cross-entropy method with parameters p, grammar 'grammar', and start symbol typ, and loss function 'loss'.  Loss function has the form: los::Float64=loss(node::RuleNode, grammar::Grammar)
 
 See: Rubinstein, "Optimization of Computer Simulation Models with Rare Events", European Journal of Operations Research, 99, 89-112, 1197
 """
@@ -63,7 +63,7 @@ optimize(p::CrossEntropyParams, grammar::Grammar, typ::Symbol, loss::Function) =
 """
     cross_entropy(p::CrossEntropyParams, grammar::Grammar, typ::Symbol)
 
-Expression tree optimization using cross-entropy method with parameters p, grammar 'grammar', and start symbol typ, and loss function 'loss'.  Loss function has the form: los::Float64=loss(node::RuleNode)
+Expression tree optimization using cross-entropy method with parameters p, grammar 'grammar', and start symbol typ, and loss function 'loss'.  Loss function has the form: los::Float64=loss(node::RuleNode, grammar::Grammar)
 
 See: Rubinstein, "Optimization of Computer Simulation Models with Rare Events", European Journal of Operations Research, 99, 89-112, 1197
 """
@@ -73,13 +73,13 @@ function cross_entropy(p::CrossEntropyParams, grammar::Grammar, typ::Symbol, los
     losses = Vector{Float64}(p.pop_size)
     pcfg = ProbabilisticGrammar(grammar)
     pop = initialize(p.init_method, p.pop_size, pcfg, typ, p.max_depth)
-    best_tree, best_loss = evaluate!(loss, pop, losses, RuleNode(0), Inf)
+    best_tree, best_loss = evaluate!(loss, grammar, pop, losses, RuleNode(0), Inf)
     for iter = 1:p.iterations 
         for i in eachindex(pop)
             pop[i] = rand(RuleNode, pcfg, typ, p.max_depth)
         end
         fit_mle!(pcfg, pop[1:p.top_k], p.p_init)
-        best_tree, best_loss = evaluate!(loss, pop, losses, best_tree, best_loss)
+        best_tree, best_loss = evaluate!(loss, grammar, pop, losses, best_tree, best_loss)
     end
     ExprOptResult(best_tree, best_loss, get_executable(best_tree, grammar), nothing)
 end
@@ -93,14 +93,15 @@ initialize(::RandomInit, pop_size::Int, pcfg::ProbabilisticGrammar, typ::Symbol,
     [rand(RuleNode, pcfg, typ, max_depth) for i = 1:pop_size]
 
 """
-    evaluate!(loss::Function, pop::Vector{RuleNode}, losses::Vector{Float64}, best_tree::RuleNode, best_loss::Float64)
+    evaluate!(loss::Function, grammar::Grammar, pop::Vector{RuleNode}, losses::Vector{Float64}, 
+        best_tree::RuleNode, best_loss::Float64)
 
 Evaluate the loss function for population and sort.  Update the globally best tree, if needed.
 """
-function evaluate!(loss::Function, pop::Vector{RuleNode}, losses::Vector{Float64}, best_tree::RuleNode, 
-    best_loss::Float64)
+function evaluate!(loss::Function, grammar::Grammar, pop::Vector{RuleNode}, losses::Vector{Float64}, 
+                   best_tree::RuleNode, best_loss::Float64)
 
-    losses[:] = loss.(pop)
+    losses[:] = loss.(pop, grammar)
     perm = sortperm(losses)
     pop[:], losses[:] = pop[perm], losses[perm]
     if losses[1] < best_loss
