@@ -10,7 +10,8 @@ let
     pcfg = ProbabilisticExprRules.ProbabilisticGrammar(grammar)
     @test ProbabilisticExprRules.probabilities(pcfg, :R) == normalize(ones(length(grammar[:R])), 1)
 
-    r = rand(RuleNode, pcfg, :R)
+    dmap = mindepth_map(grammar)
+    r = rand(RuleNode, pcfg, :R, dmap)
 
     iter = ExpressionIterator(grammar, 2, :R)
     pop = collect(iter)

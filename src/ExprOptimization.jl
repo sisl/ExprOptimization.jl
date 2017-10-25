@@ -2,8 +2,6 @@ __precompile__()
 
 module ExprOptimization
 
-using ExprRules
-
 export 
         @grammar,
         Grammar,
@@ -11,6 +9,7 @@ export
         get_executable,
 
         optimize,
+        ExprOptParams,
         ExprOptResult,
 
         ProbabilisticExprRules,
@@ -31,6 +30,10 @@ export
 
         PIPE,
         PIPEParams
+
+
+using Reexport
+@reexport using ExprRules
 
 abstract type ExprOptParams end
 

@@ -26,8 +26,9 @@ let
     @test eval(best_tree, grammar) == 1
     @test best_loss == 1
 
+    dmap = mindepth_map(grammar)
     GeneticProgram.select(p.select_method, pop, losses)
     GeneticProgram.crossover(pop[1], pop[2],  grammar)
-    GeneticProgram.mutation(pop[3], grammar)
+    GeneticProgram.mutation(pop[3], grammar, dmap)
 end
 

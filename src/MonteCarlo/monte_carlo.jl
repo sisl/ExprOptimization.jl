@@ -34,10 +34,12 @@ optimize(p::MonteCarloParams, grammar::Grammar, typ::Symbol, loss::Function) = m
 
 Expression tree optimization using Monte Carlo with parameters p, grammar 'grammar', start symbol typ, and loss function 'loss'.  Loss function has the form : los::Float64=loss(node::RuleNode, grammar::Grammar).  Draw Monte Carlo samples from the grammar and return the one with the best loss.
 """
-function monte_carlo(p::MonteCarloParams, grammar::Grammar, typ::Symbol, loss::Function)
+function monte_carlo(p::MonteCarloParams, grammar::Grammar, typ::Symbol, loss::Function; verbose::Bool=false)
+    dmap = mindepth_map(grammar)
     best_tree, best_loss = RuleNode(0), Inf
     for i = 1:p.num_samples
-        tree = rand(RuleNode, grammar, typ, p.max_depth)
+        verbose && println("samples: $i of $(p.num_samples)")
+        tree = rand(RuleNode, grammar, typ, dmap, p.max_depth)
         los = loss(tree, grammar)
         if los < best_loss
             best_tree, best_loss = tree, los

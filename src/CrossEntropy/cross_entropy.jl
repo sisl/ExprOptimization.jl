@@ -70,13 +70,14 @@ See: Rubinstein, "Optimization of Computer Simulation Models with Rare Events", 
 function cross_entropy(p::CrossEntropyParams, grammar::Grammar, typ::Symbol, loss::Function)
     iseval(grammar) && error("Cross-entropy does not support _() functions in the grammar")
 
+    dmap = mindepth_map(grammar)
     losses = Vector{Float64}(p.pop_size)
     pcfg = ProbabilisticGrammar(grammar)
-    pop = initialize(p.init_method, p.pop_size, pcfg, typ, p.max_depth)
+    pop = initialize(p.init_method, p.pop_size, pcfg, typ, dmap, p.max_depth)
     best_tree, best_loss = evaluate!(loss, grammar, pop, losses, RuleNode(0), Inf)
     for iter = 1:p.iterations 
         for i in eachindex(pop)
-            pop[i] = rand(RuleNode, pcfg, typ, p.max_depth)
+            pop[i] = rand(RuleNode, pcfg, typ, dmap, p.max_depth)
         end
         fit_mle!(pcfg, pop[1:p.top_k], p.p_init)
         best_tree, best_loss = evaluate!(loss, grammar, pop, losses, best_tree, best_loss)
@@ -85,12 +86,15 @@ function cross_entropy(p::CrossEntropyParams, grammar::Grammar, typ::Symbol, los
 end
 
 """
-    initialize(::RandomInit, pop_size::Int, grammar::Grammar, typ::Symbol, max_depth::Int)
+    initialize(::RandomInit, pop_size::Int, grammar::Grammar, typ::Symbol, dmap::AbstractVector{Int},
+        max_depth::Int)
 
 Random population initialization.
 """
-initialize(::RandomInit, pop_size::Int, pcfg::ProbabilisticGrammar, typ::Symbol, max_depth::Int) = 
-    [rand(RuleNode, pcfg, typ, max_depth) for i = 1:pop_size]
+function initialize(::RandomInit, pop_size::Int, pcfg::ProbabilisticGrammar, typ::Symbol, 
+            dmap::AbstractVector{Int}, max_depth::Int)
+    [rand(RuleNode, pcfg, typ, dmap, max_depth) for i = 1:pop_size]
+end
 
 """
     evaluate!(loss::Function, grammar::Grammar, pop::Vector{RuleNode}, losses::Vector{Float64}, 

@@ -97,8 +97,8 @@ Koza, "Genetic programming: on the programming of computers by means of natural 
 Three operators are implemented: reproduction, crossover, and mutation.
 """
 function genetic_program(p::GeneticProgramParams, grammar::Grammar, typ::Symbol, loss::Function)
-
-    pop0 = initialize(p.init_method, p.pop_size, grammar, typ, p.max_depth)
+    dmap = mindepth_map(grammar)
+    pop0 = initialize(p.init_method, p.pop_size, grammar, typ, dmap, p.max_depth)
     pop1 = Vector{RuleNode}(p.pop_size)
     losses = Vector{Float64}(p.pop_size)
 
@@ -117,7 +117,7 @@ function genetic_program(p::GeneticProgramParams, grammar::Grammar, typ::Symbol,
                 pop1[i+=1] = child
             elseif op == :mutation
                 ind1 = select(p.select_method, pop0, losses)
-                child1 = mutation(ind1, grammar, p.max_depth)
+                child1 = mutation(ind1, grammar, dmap, p.max_depth)
                 pop1[i+=1] = child1
             end
         end
@@ -128,12 +128,15 @@ function genetic_program(p::GeneticProgramParams, grammar::Grammar, typ::Symbol,
 end
 
 """
-    initialize(::RandomInit, pop_size::Int, grammar::Grammar, typ::Symbol, max_depth::Int)
+    initialize(::RandomInit, pop_size::Int, grammar::Grammar, typ::Symbol, dmap::AbstractVector{Int}, 
+max_depth::Int)
 
 Random population initialization.
 """
-initialize(::RandomInit, pop_size::Int, grammar::Grammar, typ::Symbol, max_depth::Int) = 
-    [rand(RuleNode, grammar, typ, max_depth) for i = 1:pop_size]
+function initialize(::RandomInit, pop_size::Int, grammar::Grammar, typ::Symbol, dmap::AbstractVector{Int},
+           max_depth::Int)
+    [rand(RuleNode, grammar, typ, dmap, max_depth) for i = 1:pop_size]
+end
 
 """
     select(p::TournamentSelection, pop::Vector{RuleNode}, losses::Vector{Float64})
@@ -191,11 +194,11 @@ function crossover(a::RuleNode, b::RuleNode, grammar::Grammar, max_depth::Int=ty
 end
 
 """
-    mutation(a::RuleNode, grammar::Grammar, max_depth::Int=5)
+    mutation(a::RuleNode, grammar::Grammar, dmap::AbstractVector{Int}, max_depth::Int=5)
 
 Mutation genetic operator.  Pick a random node from 'a', then replace the subtree with a random one.
 """
-function mutation(a::RuleNode, grammar::Grammar, max_depth::Int=5)
+function mutation(a::RuleNode, grammar::Grammar, dmap::AbstractVector{Int}, max_depth::Int=5)
     child = deepcopy(a)
     loc = sample(NodeLoc, child)
     mutatepoint = get(child, loc) 
@@ -203,7 +206,7 @@ function mutation(a::RuleNode, grammar::Grammar, max_depth::Int=5)
     d_node = node_depth(child, mutatepoint)
     d_max = max_depth + 1 - d_node
     if d_max > 0
-        subtree = rand(RuleNode, grammar, typ, d_max)
+        subtree = rand(RuleNode, grammar, typ, dmap, d_max)
         insert!(child, loc, subtree)
     end
     child

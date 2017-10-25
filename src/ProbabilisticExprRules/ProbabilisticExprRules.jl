@@ -32,22 +32,20 @@ end
 probabilities(pcfg::ProbabilisticGrammar, typ::Symbol) = pcfg.probs[typ]
 
 """
-    rand(::Type{RuleNode}, grammar::ProbabilisticGrammar, typ::Symbol, max_depth::Int=10)
+    rand(::Type{RuleNode}, grammar::ProbabilisticGrammar, typ::Symbol, dmap::AbstractVector{Int}, 
+        max_depth::Int=10)
 
 Generates a random RuleNode of return type typ and maximum depth max_depth.
 """
-function Base.rand(::Type{RuleNode}, pcfg::ProbabilisticGrammar, typ::Symbol, max_depth::Int=10)
+function Base.rand(::Type{RuleNode}, pcfg::ProbabilisticGrammar, typ::Symbol, dmap::AbstractVector{Int},   
+                    max_depth::Int=10)
     grammar = pcfg.grammar
     rules = grammar[typ]
     probs = probabilities(pcfg, typ)
 
-    rule_index = if max_depth > 1
-        StatsBase.sample(rules, weights(probs))
-    else
-        inds = find(r->isterminal(grammar, r), rules)   
-        rules, probs = rules[inds], probs[inds]
-        StatsBase.sample(rules, weights(probs))
-    end
+    inds = find(r->dmap[r] ≤ max_depth, rules)   
+    rules, probs = rules[inds], probs[inds]
+    rule_index = StatsBase.sample(rules, weights(probs))
 
     rulenode = grammar.iseval[rule_index] ?
         RuleNode(rule_index, eval(Main, grammar.rules[rule_index].args[2])) :
@@ -55,7 +53,7 @@ function Base.rand(::Type{RuleNode}, pcfg::ProbabilisticGrammar, typ::Symbol, ma
 
     if !grammar.isterminal[rule_index]
         for ch in child_types(grammar, rule_index)
-            push!(rulenode.children, rand(RuleNode, pcfg, ch, max_depth-1))
+            push!(rulenode.children, rand(RuleNode, pcfg, ch, dmap, max_depth-1))
         end
     end
     return rulenode
