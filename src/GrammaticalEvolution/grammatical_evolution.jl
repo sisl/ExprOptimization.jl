@@ -24,7 +24,8 @@ Parameters for Grammatical Evolution.
 - `typ::Symbol`: start symbol
 - `pop_size::Int`: population size
 - `iterations::Int`: number of iterations
-- `gene_length::Int`: length of genotype integer array
+- `init_gene_length::Int`: initial length of genotype integer array
+- `max_gene_length::Int`: maximum length of genotype integer array
 - `max_depth::Int`: maximum depth of derivation tree
 - `p_reproduction::Float64`: probability of reproduction operator
 - `p_crossover::Float64`: probability of crossover operator
@@ -35,7 +36,8 @@ Parameters for Grammatical Evolution.
 struct GrammaticalEvolutionParams <: ExprOptParams
     pop_size::Int
     iterations::Int
-    gene_length::Int
+    init_gene_length::Int
+    max_gene_length::Int
     max_depth::Int
     p_operators::Weights
     select_method::SelectionMethod
@@ -46,7 +48,8 @@ struct GrammaticalEvolutionParams <: ExprOptParams
         typ::Symbol,
         pop_size::Int,                          #population size 
         iterations::Int,                        #number of generations 
-        gene_length::Int,                       #length of genotype Int vector
+        init_gene_length::Int,                  #initial length of genotype Int vector
+        max_gene_length::Int,                   #maximum length of genotype Int vector
         max_depth::Int,                         #maximum depth of derivation tree
         p_reproduction::Float64,                #probability of reproduction operator 
         p_crossover::Float64,                   #probability of crossover operator
@@ -55,7 +58,7 @@ struct GrammaticalEvolutionParams <: ExprOptParams
         mutate_method::MutationMethod=MultiMutate(grammar, typ))
         
         p_operators = Weights([p_reproduction, p_crossover, p_mutation])
-        new(pop_size, iterations, gene_length, max_depth, p_operators, select_method, mutate_method)
+        new(pop_size, iterations, init_gene_length, max_gene_length, max_depth, p_operators, select_method, mutate_method)
     end
 end
 
@@ -143,7 +146,7 @@ See: Ryan, Collins, O'Neil, "Grammatical Evolution: Evolving Programs for an Arb
 function grammatical_evolution(p::GrammaticalEvolutionParams, grammar::Grammar, typ::Symbol, loss::Function)
     iseval(grammar) && error("Grammatical Evolution does not support _() functions in the grammar")
 
-    pop0 = initialize(p.pop_size, p.gene_length) 
+    pop0 = initialize(p.pop_size, p.init_gene_length) 
     pop1 = [Int[] for i=1:p.pop_size]
     losses = Vector{Float64}(p.pop_size)
 
@@ -159,12 +162,12 @@ function grammatical_evolution(p::GrammaticalEvolutionParams, grammar::Grammar, 
                 ind1 = select(p.select_method, pop0, losses)
                 ind2 = select(p.select_method, pop0, losses)
                 child = crossover(ind1, ind2)
-                limit_length!(child, p.gene_length)
+                limit_length!(child, p.max_gene_length)
                 pop1[i+=1] = child
             elseif op == :mutation
                 ind1 = select(p.select_method, pop0, losses)
                 child1 = mutation(p.mutate_method, ind1)
-                limit_length!(child1, p.gene_length)
+                limit_length!(child1, p.max_gene_length)
                 pop1[i+=1] = child1
             end
         end

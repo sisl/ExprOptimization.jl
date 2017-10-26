@@ -12,13 +12,13 @@ let
     end
 
     srand(0)
-    p = GrammaticalEvolutionParams(grammar, :R, 10, 5, 5, 4, 0.2, 0.4, 0.4)
+    p = GrammaticalEvolutionParams(grammar, :R, 10, 5, 5, 5, 4, 0.2, 0.4, 0.4)
     res = optimize(p, grammar, :R, loss)
     @test res.expr == 1
     @test eval(res.tree, grammar) == 1
     @test res.loss == 1 
 
-    pop = GrammaticalEvolution.initialize(p.pop_size, p.gene_length)
+    pop = GrammaticalEvolution.initialize(p.pop_size, p.init_gene_length)
     node = GrammaticalEvolution.decode(pop[1], grammar, :R).node
 
     losses = Vector{Float64}(length(pop))
