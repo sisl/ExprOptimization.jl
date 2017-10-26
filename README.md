@@ -9,7 +9,7 @@ The following algorithms are implemented:
 * Cross-Entropy Method
 * Probabilistic Incremental Program Execution (PIPE)
 
-## Dependencies
+## Main Dependencies
 
 * sisl/ExprRules.jl
 
@@ -24,4 +24,4 @@ Please see the [example notebook](http://nbviewer.ipython.org/github/sisl/ExprOp
 * Tim Wheeler, tawheeler@stanford.edu
 * Mykel Kochenderfer, mykel@stanford.edu
 
-[![Build Status](https://travis-ci.org/sisl/ExprOptimization.jl.svg?branch=master)](https://travis-ci.org/sisl/ExprOptimization.jl) [![Coverage Status](https://coveralls.io/repos/sisl/ExprOptimization.jl/badge.svg?branch=master&service=github)](https://coveralls.io/github/sisl/ExprOptimization.jl?branch=master)
+[![Build Status](https://travis-ci.org/sisl/ExprOptimization.jl.svg?branch=master)](https://travis-ci.org/sisl/ExprOptimization.jl) [![Coverage Status](https://coveralls.io/repos/sisl/ExprOptimization.jl/badge.svg?branch=master)](https://coveralls.io/github/sisl/ExprOptimization.jl?branch=master)
