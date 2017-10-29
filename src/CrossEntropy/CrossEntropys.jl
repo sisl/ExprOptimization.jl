@@ -1,21 +1,21 @@
 
-module CrossEntropy
+module CrossEntropys
 
 using ExprRules
 using ..ProbabilisticExprRules
-using ..ExprOptParams
+using ..ExprOptAlgorithm
 using ..ExprOptResult
 
 import ..optimize
 
-export CrossEntropyParams
+export CrossEntropy
 
 abstract type InitializationMethod end 
 
 """
-    CrossEntropyParams
+    CrossEntropy
 
-Parameters for Cross Entropy method.
+Cross Entropy method.
 # Arguments
 - `pop_size::Int`: population size
 - `iiterations::Int`: number of iterations
@@ -24,7 +24,7 @@ Parameters for Cross Entropy method.
 - `p_init::Float64`: initial value when fitting MLE 
 - `init_method::InitializationMethod`: Initialization method
 """
-struct CrossEntropyParams <: ExprOptParams
+struct CrossEntropy <: ExprOptAlgorithm
     pop_size::Int                                       
     iterations::Int                                     
     max_depth::Int                                      
@@ -32,7 +32,7 @@ struct CrossEntropyParams <: ExprOptParams
     p_init::Float64
     init_method::InitializationMethod
 
-    function CrossEntropyParams(
+    function CrossEntropy(
         pop_size::Int,                                  #population size
         iterations::Int,                                #number of iterations
         max_depth::Int,                                 #maximum depth of derivation tree
@@ -52,22 +52,22 @@ Uniformly random initialization method.
 struct RandomInit <: InitializationMethod end
 
 """
-    optimize(p::CrossEntropyParams, grammar::Grammar, typ::Symbol, loss::Function)
+    optimize(p::CrossEntropy, grammar::Grammar, typ::Symbol, loss::Function)
 
 Expression tree optimization using the cross-entropy method with parameters p, grammar 'grammar', and start symbol typ, and loss function 'loss'.  Loss function has the form: los::Float64=loss(node::RuleNode, grammar::Grammar)
 
 See: Rubinstein, "Optimization of Computer Simulation Models with Rare Events", European Journal of Operations Research, 99, 89-112, 1197
 """
-optimize(p::CrossEntropyParams, grammar::Grammar, typ::Symbol, loss::Function) = cross_entropy(p, grammar, typ, loss)
+optimize(p::CrossEntropy, grammar::Grammar, typ::Symbol, loss::Function) = cross_entropy(p, grammar, typ, loss)
 
 """
-    cross_entropy(p::CrossEntropyParams, grammar::Grammar, typ::Symbol)
+    cross_entropy(p::CrossEntropy, grammar::Grammar, typ::Symbol)
 
 Expression tree optimization using cross-entropy method with parameters p, grammar 'grammar', and start symbol typ, and loss function 'loss'.  Loss function has the form: los::Float64=loss(node::RuleNode, grammar::Grammar)
 
 See: Rubinstein, "Optimization of Computer Simulation Models with Rare Events", European Journal of Operations Research, 99, 89-112, 1197
 """
-function cross_entropy(p::CrossEntropyParams, grammar::Grammar, typ::Symbol, loss::Function)
+function cross_entropy(p::CrossEntropy, grammar::Grammar, typ::Symbol, loss::Function)
     iseval(grammar) && error("Cross-entropy does not support _() functions in the grammar")
 
     dmap = mindepth_map(grammar)

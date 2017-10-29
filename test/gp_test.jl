@@ -12,7 +12,7 @@ let
     end
 
     srand(0)
-    p = GeneticProgramParams(10, 5, 4, 0.3, 0.3, 0.3)
+    p = GeneticProgram(10, 5, 4, 0.3, 0.3, 0.3)
     res = optimize(p, grammar, :R, loss)
     @test res.expr == 1
     @test eval(res.tree, grammar) == 1
@@ -22,13 +22,13 @@ let
     pop = collect(iter)
 
     losses = Vector{Float64}(length(pop))
-    (best_tree, best_loss) = GeneticProgram.evaluate!(loss, grammar, pop, losses, pop[1], Inf)
+    (best_tree, best_loss) = GeneticPrograms.evaluate!(loss, grammar, pop, losses, pop[1], Inf)
     @test eval(best_tree, grammar) == 1
     @test best_loss == 1
 
     dmap = mindepth_map(grammar)
-    GeneticProgram.select(p.select_method, pop, losses)
-    GeneticProgram.crossover(pop[1], pop[2],  grammar)
-    GeneticProgram.mutation(pop[3], grammar, dmap)
+    GeneticPrograms.select(p.select_method, pop, losses)
+    GeneticPrograms.crossover(pop[1], pop[2],  grammar)
+    GeneticPrograms.mutation(pop[3], grammar, dmap)
 end
 

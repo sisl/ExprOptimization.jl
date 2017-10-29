@@ -9,33 +9,33 @@ export
         get_executable,
 
         optimize,
-        ExprOptParams,
+        ExprOptAlgorithm,
         ExprOptResult,
 
         ProbabilisticExprRules,
+        PPTs,
         PPT,
-        PPTParams,
 
+        MonteCarlos,
         MonteCarlo,
-        MonteCarloParams,
 
+        GeneticPrograms,
         GeneticProgram,
-        GeneticProgramParams,
 
+        GrammaticalEvolutions,
         GrammaticalEvolution,
-        GrammaticalEvolutionParams,
 
+        CrossEntropys,
         CrossEntropy,
-        CrossEntropyParams,
 
-        PIPE,
-        PIPEParams
+        PIPEs,
+        PIPE
 
 
 using Reexport
 @reexport using ExprRules
 
-abstract type ExprOptParams end
+abstract type ExprOptAlgorithm end
 
 """
     ExprOptResult
@@ -50,9 +50,9 @@ struct ExprOptResult
 end
 
 """
-    optimize(p::ExprOptParams, grammar::Grammar, typ::Symbol, loss::Function)
+    optimize(p::ExprOptAlgorithm, grammar::Grammar, typ::Symbol, loss::Function)
 
-Main entry for expression optimization.  Use concrete ExprOptParams to specify optimization algorithm. Optimize using grammar and start symbol, typ, and loss function.  Loss function has the form: los::Float64=loss(node::RuleNode).
+Main entry for expression optimization.  Use concrete ExprOptAlgorithm to specify optimization algorithm. Optimize using grammar and start symbol, typ, and loss function.  Loss function has the form: los::Float64=loss(node::RuleNode).
 """
 function optimize end   #implemented by algorithms
 
@@ -60,25 +60,25 @@ function optimize end   #implemented by algorithms
 # Common base modules
 include("ProbabilisticExprRules/ProbabilisticExprRules.jl")
 
-include("PPT/ppt.jl")
-using .PPT: PPTParams
+include("PPT/PPTs.jl")
+using .PPTs: PPT
 
 #############################################################################
 # Optimization algorithms
 
-include("MonteCarlo/monte_carlo.jl")
-using .MonteCarlo
+include("MonteCarlo/MonteCarlos.jl")
+using .MonteCarlos
 
-include("GeneticProgram/genetic_program.jl")
-using .GeneticProgram
+include("GeneticProgram/GeneticPrograms.jl")
+using .GeneticPrograms
 
-include("GrammaticalEvolution/grammatical_evolution.jl")
-using .GrammaticalEvolution
+include("GrammaticalEvolution/GrammaticalEvolutions.jl")
+using .GrammaticalEvolutions
 
-include("CrossEntropy/cross_entropy.jl")
-using .CrossEntropy
+include("CrossEntropy/CrossEntropys.jl")
+using .CrossEntropys
 
-include("PIPE/pipe.jl")
-using .PIPE
+include("PIPE/PIPEs.jl")
+using .PIPEs
 
 end # module

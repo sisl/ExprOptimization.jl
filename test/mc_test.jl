@@ -12,7 +12,7 @@ let
     end
 
     srand(0)
-    p = MonteCarloParams(20, 5)
+    p = MonteCarlo(20, 5)
     res = optimize(p, grammar, :R, loss)
     @test res.expr == 1
     @test eval(res.tree, grammar) == 1

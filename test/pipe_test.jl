@@ -12,7 +12,7 @@ let
     end
 
     srand(0)
-    p = PIPEParams(PIPE.PPTParams(0.8),20,2,0.2,0.1,0.05,1,0.2,0.6,0.999,10)
+    p = PIPE(PPT(0.8),20,2,0.2,0.1,0.05,1,0.2,0.6,0.999,10)
     res = optimize(p, grammar, :R, loss)
     @test res.expr == 1
     @test eval(res.tree, grammar) == 1
@@ -22,13 +22,13 @@ let
     pop = collect(iter)
 
     losses = Vector{Float64}(length(pop))
-    (best_tree, best_loss) = PIPE.evaluate!(loss, grammar, pop, losses, pop[1], Inf)
+    (best_tree, best_loss) = PIPEs.evaluate!(loss, grammar, pop, losses, pop[1], Inf)
     @test eval(best_tree, grammar) == 1
     @test best_loss == 1
 
-    ppt = PIPE.PPTNode(p.ppt_params, grammar)
-    PIPE.update!(p, ppt, grammar, pop[1], losses[1], best_loss) 
-    PIPE.p_target(p.ppt_params, ppt, grammar, pop[1], losses[1], best_loss, p.α, p.ϵ)
-    PIPE.mutate!(ppt, grammar, pop[1], p.p_mutation, p.β)
+    ppt = PIPEs.PPTNode(p.ppt_params, grammar)
+    PIPEs.update!(p, ppt, grammar, pop[1], losses[1], best_loss) 
+    PIPEs.p_target(p.ppt_params, ppt, grammar, pop[1], losses[1], best_loss, p.α, p.ϵ)
+    PIPEs.mutate!(ppt, grammar, pop[1], p.p_mutation, p.β)
 end
 

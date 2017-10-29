@@ -7,20 +7,20 @@ let
         R = |(1:3)
     end
 
-    p = PPTParams(0.75)
-    ppt = PPT.PPTNode(p, grammar)
+    p = PPT(0.75)
+    ppt = PPTs.PPTNode(p, grammar)
     
-    @test PPT.nchildren(ppt) == 0
+    @test PPTs.nchildren(ppt) == 0
 
-    PPT.get_child(p, ppt, grammar, 1)
-    @test PPT.nchildren(ppt) == 1
-    PPT.get_child(p, ppt, grammar, 2)
-    @test PPT.nchildren(ppt) == 2
+    PPTs.get_child(p, ppt, grammar, 1)
+    @test PPTs.nchildren(ppt) == 1
+    PPTs.get_child(p, ppt, grammar, 2)
+    @test PPTs.nchildren(ppt) == 2
 
-    @test all(isapprox.(PPT.probabilities(ppt, :R), [0.1, 0.3, 0.3, 0.3]; atol=0.01))
+    @test all(isapprox.(PPTs.probabilities(ppt, :R), [0.1, 0.3, 0.3, 0.3]; atol=0.01))
 
     r = rand(p, ppt, grammar, :R)
-    PPT.probability(p, ppt, grammar, r)
-    PPT.prune!(ppt, grammar, 0.999)
+    PPTs.probability(p, ppt, grammar, r)
+    PPTs.prune!(ppt, grammar, 0.999)
 end
 

@@ -1,21 +1,21 @@
 
-module PIPE
+module PIPEs
 
 using ExprRules, StatsBase
-using ..PPT
-using ..ExprOptParams
+using ..PPTs
+using ..ExprOptAlgorithm
 using ..ExprOptResult
 
 import ..optimize
 
-export PPTParams, PIPEParams
+export PPT, PIPE
 
 """
-    PIPEParams
+    PIPE
 
-Parameters for Probabilistic Incremental Program Evolution. Example parameters from paper are indicated in parentheses)
+Probabilistic Incremental Program Evolution. Example parameters from paper are indicated in parentheses)
 # Arguments:
-- `ppt_params::PPTParams`: parameters for PPT  (e.g., [0.8, 0.2])
+- `ppt_params::PPT`: parameters for PPT  (e.g., [0.8, 0.2])
 - `pop_size::Int`: population size 
 - `iterations::Int`: number of iterations
 - `p_elitist::Float64`: elitist update probability (e.g., 0.2)
@@ -27,8 +27,8 @@ Parameters for Probabilistic Incremental Program Evolution. Example parameters f
 - `p_threshold::Float64`: prune threshold (e.g., 0.999)
 - `max_depth::Int`: maximum depth of derivation tree
 """
-struct PIPEParams <: ExprOptParams
-    ppt_params::PPTParams
+struct PIPE <: ExprOptAlgorithm
+    ppt_params::PPT
     pop_size::Int
     iterations::Int
     p_elitist::Float64
@@ -42,21 +42,21 @@ struct PIPEParams <: ExprOptParams
 end
 
 """
-    optimize(p::PIPEParams, grammar::Grammar, typ::Symbol, loss::Function)
+    optimize(p::PIPE, grammar::Grammar, typ::Symbol, loss::Function)
 
 Expression tree optimization using the PIPE algorithm with parameters p, grammar 'grammar', start symbol typ, and loss function 'loss'.  Loss function has the form: los::Float64=loss(node::RuleNode, grammar::Grammar).
 """
-optimize(p::PIPEParams, grammar::Grammar, typ::Symbol, loss::Function) = pipe(p, grammar, typ, loss)
+optimize(p::PIPE, grammar::Grammar, typ::Symbol, loss::Function) = pipe(p, grammar, typ, loss)
 
 """
-    pipe(p::PIPEParams, grammar::Grammar, typ::Symbol, loss::Function)
+    pipe(p::PIPE, grammar::Grammar, typ::Symbol, loss::Function)
 
 Probabilistic Incremental Program Evolution (PIPE) optimization algorithm with parameters p, grammar 'grammar', start symbol typ, and loss function 'loss'.  Loss function has the form: los::Float64=loss(node::RuleNode, grammar::Grammar).
 
 Reference: R. Salustowicz and J. Schmidhuber, "Probabilistic Incremental Program Evolution", 
     Evolutionary Computation, vol. 5, no. 2, pp. 123-141, 1997.
 """
-function pipe(p::PIPEParams, grammar::Grammar, typ::Symbol, loss::Function)
+function pipe(p::PIPE, grammar::Grammar, typ::Symbol, loss::Function)
     iseval(grammar) && error("PIPE does not support _() functions in the grammar")
 
     best_tree, best_loss = RuleNode(0), Inf
@@ -82,24 +82,24 @@ function pipe(p::PIPEParams, grammar::Grammar, typ::Symbol, loss::Function)
 end
 
 """
-    p_target(pp::PPTParams, ppt::PPTNode, grammar::Grammar, x_best::RuleNode, y_best::Float64, 
+    p_target(pp::PPT, ppt::PPTNode, grammar::Grammar, x_best::RuleNode, y_best::Float64, 
                   y_elite::Float64, α::Float64, ϵ::Float64)
 
 Compute the target probability p_target.  See PIPE paper for description of equation.
 """
-function p_target(pp::PPTParams, ppt::PPTNode, grammar::Grammar, x_best::RuleNode, y_best::Float64, 
+function p_target(pp::PPT, ppt::PPTNode, grammar::Grammar, x_best::RuleNode, y_best::Float64, 
                   y_elite::Float64, α::Float64, ϵ::Float64)
     p_best = probability(pp, ppt, grammar, x_best)
     return p_best + (1-p_best)*α*(ϵ - y_elite)/(ϵ - y_best)
 end
 
 """
-    update!(p::PIPEParams, ppt::PPTNode, grammar::Grammar, x::RuleNode, y::Float64, 
+    update!(p::PIPE, ppt::PPTNode, grammar::Grammar, x::RuleNode, y::Float64, 
                  y_elite::Float64)
 
 Update the ppt probabilities toward individual x with loss y given elite loss y_elite.
 """
-function update!(p::PIPEParams, ppt::PPTNode, grammar::Grammar, x::RuleNode, y::Float64, 
+function update!(p::PIPE, ppt::PPTNode, grammar::Grammar, x::RuleNode, y::Float64, 
                  y_elite::Float64)
     pp, c, α, ϵ = p.ppt_params, p.c, p.α, p.ϵ
     p_targ = p_target(pp, ppt, grammar, x, y, y_elite, α, ϵ)

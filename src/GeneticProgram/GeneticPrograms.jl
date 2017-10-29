@@ -1,14 +1,14 @@
 
-module GeneticProgram
+module GeneticPrograms
 
 using ExprRules
 using StatsBase
-using ..ExprOptParams
+using ..ExprOptAlgorithm
 using ..ExprOptResult
 
 import ..optimize
 
-export GeneticProgramParams
+export GeneticProgram
 
 const OPERATORS = [:reproduction, :crossover, :mutation]
 
@@ -16,9 +16,9 @@ abstract type InitializationMethod end
 abstract type SelectionMethod end
 
 """
-    GeneticProgramParams
+    GeneticProgram
 
-Parameters for Genetic Programming.
+Genetic Programming.
 # Arguments
 - `pop_size::Int`: population size
 - `iterations::Int`: number of iterations
@@ -29,7 +29,7 @@ Parameters for Genetic Programming.
 - `init_method::InitializationMethod`: initialization method
 - `select_method::SelectionMethod`: selection method
 """
-struct GeneticProgramParams <: ExprOptParams
+struct GeneticProgram <: ExprOptAlgorithm
     pop_size::Int
     iterations::Int
     max_depth::Int
@@ -37,7 +37,7 @@ struct GeneticProgramParams <: ExprOptParams
     init_method::InitializationMethod
     select_method::SelectionMethod
 
-    function GeneticProgramParams(
+    function GeneticProgram(
         pop_size::Int,                          #population size 
         iterations::Int,                        #number of generations 
         max_depth::Int,                         #maximum depth of derivation tree
@@ -80,14 +80,14 @@ end
 TruncationSelection() = TruncationSelection(100)
 
 """
-    optimize(p::GeneticProgramParams, grammar::Grammar, typ::Symbol, loss::Function)
+    optimize(p::GeneticProgram, grammar::Grammar, typ::Symbol, loss::Function)
 
 Expression tree optimization using genetic programming with parameters p, grammar 'grammar', and start symbol typ, and loss function 'loss'.  Loss function has the form: los::Float64=loss(node::RuleNode, grammar::Grammar).
 """
-optimize(p::GeneticProgramParams, grammar::Grammar, typ::Symbol, loss::Function) = genetic_program(p, grammar, typ, loss)
+optimize(p::GeneticProgram, grammar::Grammar, typ::Symbol, loss::Function) = genetic_program(p, grammar, typ, loss)
 
 """
-    genetic_program(p::GeneticProgramParams, grammar::Grammar, typ::Symbol, loss::Function)
+    genetic_program(p::GeneticProgram, grammar::Grammar, typ::Symbol, loss::Function)
 
 Strongly-typed genetic programming with parameters p, grammar 'grammar', start symbol typ, and loss function 'loss'. Loss funciton has the form: los::Float64=loss(node::RuleNode, grammar::Grammar). 
     
@@ -96,7 +96,7 @@ Koza, "Genetic programming: on the programming of computers by means of natural 
 
 Three operators are implemented: reproduction, crossover, and mutation.
 """
-function genetic_program(p::GeneticProgramParams, grammar::Grammar, typ::Symbol, loss::Function)
+function genetic_program(p::GeneticProgram, grammar::Grammar, typ::Symbol, loss::Function)
     dmap = mindepth_map(grammar)
     pop0 = initialize(p.init_method, p.pop_size, grammar, typ, dmap, p.max_depth)
     pop1 = Vector{RuleNode}(p.pop_size)

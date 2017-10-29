@@ -1,14 +1,14 @@
 
-module GrammaticalEvolution
+module GrammaticalEvolutions
 
 using ExprRules
 using StatsBase
-using ..ExprOptParams
+using ..ExprOptAlgorithm
 using ..ExprOptResult
 
 import ..optimize
 
-export GrammaticalEvolutionParams
+export GrammaticalEvolution
 
 const OPERATORS = [:reproduction, :crossover, :mutation]
 
@@ -16,9 +16,9 @@ abstract type SelectionMethod end
 abstract type MutationMethod end
 
 """
-    GrammaticalEvolutionParams
+    GrammaticalEvolution
 
-Parameters for Grammatical Evolution.
+Grammatical Evolution.
 # Arguments
 - `grammar::Grammar`: grammar
 - `typ::Symbol`: start symbol
@@ -33,7 +33,7 @@ Parameters for Grammatical Evolution.
 - `select_method::SelectionMethod`: selection method (default: tournament selection)
 - `mutate_method::InitializationMethod`: mutation method (default: multi-mutate)
 """
-struct GrammaticalEvolutionParams <: ExprOptParams
+struct GrammaticalEvolution <: ExprOptAlgorithm
     pop_size::Int
     iterations::Int
     init_gene_length::Int
@@ -43,7 +43,7 @@ struct GrammaticalEvolutionParams <: ExprOptParams
     select_method::SelectionMethod
     mutate_method::MutationMethod
 
-    function GrammaticalEvolutionParams(
+    function GrammaticalEvolution(
         grammar::Grammar,
         typ::Symbol,
         pop_size::Int,                          #population size 
@@ -125,25 +125,25 @@ MultiMutate(grammar::Grammar, typ::Symbol) = MultiMutate([
     GenePruning(grammar, typ)])
 
 """
-    optimize(p::GrammaticalEvolutionParams, grammar::Grammar, typ::Symbol, loss::Function)
+    optimize(p::GrammaticalEvolution, grammar::Grammar, typ::Symbol, loss::Function)
 
 Grammatical Evolution algorithm with parameters p, grammar 'grammar', start symbol typ, and loss function 'loss'.  Loss function has the form: los::Float64=loss(node::RuleNode, grammar::Grammar).
 
 See: Ryan, Collins, O'Neil, "Grammatical Evolution: Evolving Programs for an Arbitrary Language", 
     in European Conference on Genetic Programming, Spring, 1998, pp. 83-96. 
 """
-optimize(p::GrammaticalEvolutionParams, grammar::Grammar, typ::Symbol, loss::Function) = 
+optimize(p::GrammaticalEvolution, grammar::Grammar, typ::Symbol, loss::Function) = 
     grammatical_evolution(p, grammar, typ, loss)
 
 """
-    grammatical_evolution(p::GrammaticalEvolutionParams, grammar::Grammar, typ::Symbol, loss::Function)
+    grammatical_evolution(p::GrammaticalEvolution, grammar::Grammar, typ::Symbol, loss::Function)
 
 Grammatical Evolution algorithm with parameters p, grammar 'grammar', start symbol typ, and loss function 'loss'.  Loss function has the form los::Float64=loss(node::RuleNode, grammar::Grammar).
 
 See: Ryan, Collins, O'Neil, "Grammatical Evolution: Evolving Programs for an Arbitrary Language", 
     in European Conference on Genetic Programming, Spring, 1998, pp. 83-96. 
 """
-function grammatical_evolution(p::GrammaticalEvolutionParams, grammar::Grammar, typ::Symbol, loss::Function)
+function grammatical_evolution(p::GrammaticalEvolution, grammar::Grammar, typ::Symbol, loss::Function)
     iseval(grammar) && error("Grammatical Evolution does not support _() functions in the grammar")
 
     pop0 = initialize(p.pop_size, p.init_gene_length) 
@@ -280,11 +280,11 @@ function mutation(p::MultiMutate, child::Vector{Int})
 end
 
 """
-    evaluate!(p::GrammaticalEvolutionParams, grammar::Grammar, typ::Symbol, loss::Function, pop::Vector{RuleNode}, losses::Vector{Float64}, best_tree::RuleNode, best_loss::Float64)
+    evaluate!(p::GrammaticalEvolution, grammar::Grammar, typ::Symbol, loss::Function, pop::Vector{RuleNode}, losses::Vector{Float64}, best_tree::RuleNode, best_loss::Float64)
 
 Evaluate the loss function for population and sort.  Update the globally best tree, if needed.
 """
-function evaluate!(p::GrammaticalEvolutionParams, grammar::Grammar, typ::Symbol, loss::Function,
+function evaluate!(p::GrammaticalEvolution, grammar::Grammar, typ::Symbol, loss::Function,
                    pop::Vector{Vector{Int}}, losses::Vector{Float64}, best_tree::RuleNode, 
                    best_loss::Float64)
 
