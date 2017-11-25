@@ -1,6 +1,6 @@
 The ExprOptimization.jl package is licensed under the MIT "Expat" License:
 
-> Copyright (c) 2017: Stanford Intelligent Systems Laboratory
+> Copyright (c) 2017: Stanford Intelligent Systems Laboratory.
 > 
 > 
 > Permission is hereby granted, free of charge, to any person obtaining a copy
