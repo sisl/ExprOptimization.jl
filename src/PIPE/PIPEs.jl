@@ -1,7 +1,7 @@
 
 module PIPEs
 
-using ExprRules, StatsBase
+using ExprRules, StatsBase, LinearAlgebra
 using ..PPTs
 using ..ExprOptAlgorithm
 using ..ExprOptResult
@@ -61,8 +61,8 @@ function pipe(p::PIPE, grammar::Grammar, typ::Symbol, loss::Function)
 
     best_tree, best_loss = RuleNode(0), Inf
     pp = p.ppt_params
-    pop = Vector{RuleNode}(p.pop_size)
-    losses = Vector{Float64}(p.pop_size)
+    pop = Vector{RuleNode}(undef,p.pop_size)
+    losses = Vector{Float64}(undef,p.pop_size)
 
     ppt = PPTNode(p.ppt_params, grammar)
     for i = 1:p.iterations
@@ -110,7 +110,7 @@ function update!(p::PIPE, ppt::PPTNode, grammar::Grammar, x::RuleNode, y::Float6
 end
 function _update!(ppt::PPTNode, grammar::Grammar, x::RuleNode, c::Float64, α::Float64)
     typ = return_type(grammar, x)
-    i = findfirst(grammar[typ], x.ind)
+    i = something(findfirst(isequal(x.ind),grammar[typ]), 0)
     p = ppt.ps[typ]
     p[i] += c*α*(1-p[i])
     psum = sum(p)

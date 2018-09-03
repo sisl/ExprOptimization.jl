@@ -1,5 +1,5 @@
 using ExprOptimization
-using Base.Test
+using Test, Random
 
 let
     grammar = @grammar begin
@@ -8,14 +8,14 @@ let
     end
 
     function loss(node::RuleNode, grammar::Grammar)
-        eval(node, grammar)
+        Core.eval(node, grammar)
     end
 
-    srand(0)
+    Random.seed!(0)
     p = MonteCarlo(20, 5)
     res = optimize(p, grammar, :R, loss)
     @test res.expr == 1
-    @test eval(res.tree, grammar) == 1
+    @test Core.eval(res.tree, grammar) == 1
     @test res.loss == 1 
 end
 

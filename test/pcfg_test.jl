@@ -1,5 +1,5 @@
-using ExprOptimization, ExprRules
-using Base.Test
+using ExprOptimization, ExprRules, LinearAlgebra
+using Test
 
 let
     grammar = @grammar begin

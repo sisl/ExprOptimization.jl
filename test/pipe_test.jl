@@ -1,5 +1,5 @@
 using ExprOptimization, ExprRules
-using Base.Test
+using Test, Random
 
 let
     grammar = @grammar begin
@@ -8,22 +8,22 @@ let
     end
 
     function loss(node::RuleNode, grammar::Grammar)
-        eval(node, grammar)
+        Core.eval(node, grammar)
     end
 
-    srand(0)
+    Random.seed!(0)
     p = PIPE(PPT(0.8),20,2,0.2,0.1,0.05,1,0.2,0.6,0.999,10)
     res = optimize(p, grammar, :R, loss)
     @test res.expr == 1
-    @test eval(res.tree, grammar) == 1
+    @test Core.eval(res.tree, grammar) == 1
     @test res.loss == 1 
 
     iter = ExpressionIterator(grammar, 2, :R)
     pop = collect(iter)
 
-    losses = Vector{Float64}(length(pop))
+    losses = Vector{Float64}(undef,length(pop))
     (best_tree, best_loss) = PIPEs.evaluate!(loss, grammar, pop, losses, pop[1], Inf)
-    @test eval(best_tree, grammar) == 1
+    @test Core.eval(best_tree, grammar) == 1
     @test best_loss == 1
 
     ppt = PIPEs.PPTNode(p.ppt_params, grammar)

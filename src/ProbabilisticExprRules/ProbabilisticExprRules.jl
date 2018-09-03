@@ -3,6 +3,7 @@ module ProbabilisticExprRules
 using ExprRules
 using StatsBase
 using AbstractTrees
+using LinearAlgebra
 
 export 
     @grammar, 
@@ -43,12 +44,12 @@ function Base.rand(::Type{RuleNode}, pcfg::ProbabilisticGrammar, typ::Symbol, dm
     rules = grammar[typ]
     probs = probabilities(pcfg, typ)
 
-    inds = find(r->dmap[r] ≤ max_depth, rules)   
+    inds = findall(r->dmap[r] ≤ max_depth, rules)   
     rules, probs = rules[inds], probs[inds]
     rule_index = StatsBase.sample(rules, weights(probs))
 
     rulenode = grammar.iseval[rule_index] ?
-        RuleNode(rule_index, eval(Main, grammar.rules[rule_index].args[2])) :
+        RuleNode(rule_index, Core.eval(Main, grammar.rules[rule_index].args[2])) :
         RuleNode(rule_index)
 
     if !grammar.isterminal[rule_index]
@@ -85,7 +86,7 @@ end
 function _fit_mle!(pcfg::ProbabilisticGrammar, x::RuleNode)
     grammar = pcfg.grammar
     typ = return_type(grammar, x)
-    i = findfirst(grammar[typ], x.ind) 
+    i = something(findfirst(isequal(x.ind),grammar[typ]), 0)
     pcfg.probs[typ][i] += 1.0
     for c in x.children
         _fit_mle!(pcfg, c)
@@ -105,11 +106,11 @@ function Base.fill!(pcfg::ProbabilisticGrammar, x::Float64)
 end
 
 """
-    Base.normalize!(pcfg::ProbabilisticGrammar)
+    LinearAlgebra.normalize!(pcfg::ProbabilisticGrammar)
 
 Normalize all probability vectors so that each vector sums to 1.0
 """
-function Base.normalize!(pcfg::ProbabilisticGrammar)
+function LinearAlgebra.normalize!(pcfg::ProbabilisticGrammar)
     for v in values(pcfg.probs)
         if sum(v) > 0.0
             normalize!(v, 1)

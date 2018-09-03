@@ -99,8 +99,8 @@ Three operators are implemented: reproduction, crossover, and mutation.
 function genetic_program(p::GeneticProgram, grammar::Grammar, typ::Symbol, loss::Function)
     dmap = mindepth_map(grammar)
     pop0 = initialize(p.init_method, p.pop_size, grammar, typ, dmap, p.max_depth)
-    pop1 = Vector{RuleNode}(p.pop_size)
-    losses = Vector{Float64}(p.pop_size)
+    pop1 = Vector{RuleNode}(undef,p.pop_size)
+    losses = Vector{Float64}(undef,p.pop_size)
 
     best_tree, best_loss = evaluate!(loss, grammar, pop0, losses, pop0[1], Inf)
     for iter = 1:p.iterations 

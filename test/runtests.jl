@@ -1,5 +1,5 @@
 using ExprOptimization
-using Base.Test
+using Test
 
 include("pcfg_test.jl")
 include("ppt_test.jl")

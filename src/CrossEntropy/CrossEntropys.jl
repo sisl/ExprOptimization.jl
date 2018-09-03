@@ -71,7 +71,7 @@ function cross_entropy(p::CrossEntropy, grammar::Grammar, typ::Symbol, loss::Fun
     iseval(grammar) && error("Cross-entropy does not support _() functions in the grammar")
 
     dmap = mindepth_map(grammar)
-    losses = Vector{Float64}(p.pop_size)
+    losses = Vector{Float64}(undef,p.pop_size)
     pcfg = ProbabilisticGrammar(grammar)
     pop = initialize(p.init_method, p.pop_size, pcfg, typ, dmap, p.max_depth)
     best_tree, best_loss = evaluate!(loss, grammar, pop, losses, RuleNode(0), Inf)

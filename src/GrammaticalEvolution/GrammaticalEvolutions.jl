@@ -148,7 +148,7 @@ function grammatical_evolution(p::GrammaticalEvolution, grammar::Grammar, typ::S
 
     pop0 = initialize(p.pop_size, p.init_gene_length) 
     pop1 = [Int[] for i=1:p.pop_size]
-    losses = Vector{Float64}(p.pop_size)
+    losses = Vector{Float64}(undef,p.pop_size)
 
     best_tree, best_loss = evaluate!(p, grammar, typ, loss, pop0, losses, RuleNode(0), Inf)
     for iter = 1:p.iterations 

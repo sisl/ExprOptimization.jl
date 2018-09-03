@@ -2,7 +2,8 @@ language: julia
 sudo: required
 dist: trusty
 julia:
-  - 0.6
+  - 0.7
+  - 1.0 
 notifications:
   email: false
 before_install:

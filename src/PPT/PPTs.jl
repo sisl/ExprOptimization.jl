@@ -1,6 +1,6 @@
 module PPTs
 
-using StatsBase
+using StatsBase, LinearAlgebra
 using ExprRules
 
 export 
@@ -79,8 +79,8 @@ function Base.rand(pp::PPT, pptnode::PPTNode, grammar::Grammar, typ::Symbol)
     rule_index = sample(rules, Weights(pptnode.ps[typ]))
     ctypes = child_types(grammar, rule_index)
     node = iseval(grammar, rule_index) ? 
-        RuleNode(rule_index, eval(grammar, rule_index), Vector{RuleNode}(length(ctypes))) :
-        RuleNode(rule_index, Vector{RuleNode}(length(ctypes)))
+        RuleNode(rule_index, Core.eval(grammar, rule_index), Vector{RuleNode}(undef,length(ctypes))) :
+        RuleNode(rule_index, Vector{RuleNode}(undef,length(ctypes)))
 
     for (i,typ) in enumerate(ctypes)
         node.children[i] = rand(pp, get_child(pp, pptnode, grammar, i), grammar, typ)
@@ -95,7 +95,7 @@ Compute the probability of an expression tree expr given the model ppt using par
 """
 function probability(pp::PPT, node::PPTNode, grammar::Grammar, expr::RuleNode)
     typ = return_type(grammar, expr)
-    i = findfirst(grammar[typ], expr.ind)
+    i = something(findfirst(isequal(expr.ind),grammar[typ]), 0)
     retval = node.ps[typ][i]
     for (i,c) in enumerate(expr.children)
         retval *= probability(pp, get_child(pp, node, grammar, i), grammar, c)
@@ -119,7 +119,7 @@ function prune!(node::PPTNode, grammar::Grammar, p_threshold::Float64)
     if pmax > p_threshold
         i = indmax(node.ps[kmax])
         if isterminal(grammar, i)
-            clear!(node.children)
+            empty!(node.children)
         else
             max_arity_for_rule = maximum(nchildren(grammar, r) for
                                          r in grammar[kmax])
