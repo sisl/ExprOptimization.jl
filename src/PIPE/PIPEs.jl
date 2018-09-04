@@ -3,10 +3,9 @@ module PIPEs
 
 using ExprRules, StatsBase, LinearAlgebra
 using ..PPTs
-using ..ExprOptAlgorithm
-using ..ExprOptResult
 
-import ..optimize
+using ExprOptimization: ExprOptAlgorithm, ExprOptResult
+import ExprOptimization: optimize
 
 export PPT, PIPE
 
@@ -160,7 +159,7 @@ Evaluate the loss function for population and sort.  Update the globally best tr
 function evaluate!(loss::Function, grammar::Grammar, pop::Vector{RuleNode}, losses::Vector{Float64}, 
                    best_tree::RuleNode, best_loss::Float64)
 
-    losses[:] = loss.(pop, grammar)
+    losses[:] = loss.(pop, Ref(grammar))
     perm = sortperm(losses)
     pop[:], losses[:] = pop[perm], losses[perm]
     if losses[1] < best_loss

@@ -2,10 +2,9 @@
 module MonteCarlos
 
 using ExprRules
-using ..ExprOptAlgorithm
-using ..ExprOptResult
 
-import ..optimize
+using ExprOptimization: ExprOptAlgorithm, ExprOptResult
+import ExprOptimization: optimize
 
 export MonteCarlo
 

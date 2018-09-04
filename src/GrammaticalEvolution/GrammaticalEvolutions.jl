@@ -3,10 +3,9 @@ module GrammaticalEvolutions
 
 using ExprRules
 using StatsBase
-using ..ExprOptAlgorithm
-using ..ExprOptResult
 
-import ..optimize
+using ExprOptimization: ExprOptAlgorithm, ExprOptResult 
+import ExprOptimization: optimize 
 
 export GrammaticalEvolution
 
