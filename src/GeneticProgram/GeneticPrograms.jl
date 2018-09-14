@@ -110,7 +110,7 @@ function genetic_program(p::GeneticProgram, grammar::Grammar, typ::Symbol, loss:
             op = sample(OPERATORS, p.p_operators)
             if op == :reproduction
                 ind1,j = select(p.select_method, pop0, losses0)
-                pop1[i+=1] = deepcopy(ind1)
+                pop1[i+=1] = ind1
                 losses1[i] = losses0[j]
             elseif op == :crossover
                 ind1,_ = select(p.select_method, pop0, losses0)
