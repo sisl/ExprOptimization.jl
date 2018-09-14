@@ -2,4 +2,6 @@
 *.jl.*.cov
 *.jl.mem
 *.swp
+*.swo
 .ipynb_checkpoints
+*.pyc

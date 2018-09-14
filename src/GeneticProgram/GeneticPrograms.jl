@@ -2,7 +2,7 @@
 module GeneticPrograms
 
 using ExprRules
-using StatsBase
+using StatsBase, Random
 
 using ExprOptimization: ExprOptAlgorithm, ExprOptResult
 import ExprOptimization: optimize
@@ -99,29 +99,33 @@ function genetic_program(p::GeneticProgram, grammar::Grammar, typ::Symbol, loss:
     dmap = mindepth_map(grammar)
     pop0 = initialize(p.init_method, p.pop_size, grammar, typ, dmap, p.max_depth)
     pop1 = Vector{RuleNode}(undef,p.pop_size)
-    losses = Vector{Float64}(undef,p.pop_size)
+    losses0 = Vector{Union{Float64,Missing}}(missing,p.pop_size)
+    losses1 = Vector{Union{Float64,Missing}}(missing,p.pop_size)
 
-    best_tree, best_loss = evaluate!(loss, grammar, pop0, losses, pop0[1], Inf)
-    for iter = 1:p.iterations 
+    best_tree, best_loss = evaluate!(loss, grammar, pop0, losses0, pop0[1], Inf)
+    for iter = 1:p.iterations
+        fill!(losses1, missing)
         i = 0
         while i < p.pop_size
             op = sample(OPERATORS, p.p_operators)
             if op == :reproduction
-                ind1 = select(p.select_method, pop0, losses)
+                ind1,j = select(p.select_method, pop0, losses0)
                 pop1[i+=1] = deepcopy(ind1)
+                losses1[i] = losses0[j]
             elseif op == :crossover
-                ind1 = select(p.select_method, pop0, losses)
-                ind2 = select(p.select_method, pop0, losses)
+                ind1,_ = select(p.select_method, pop0, losses0)
+                ind2,_ = select(p.select_method, pop0, losses0)
                 child = crossover(ind1, ind2, grammar, p.max_depth)
                 pop1[i+=1] = child
             elseif op == :mutation
-                ind1 = select(p.select_method, pop0, losses)
+                ind1,_ = select(p.select_method, pop0, losses0)
                 child1 = mutation(ind1, grammar, dmap, p.max_depth)
                 pop1[i+=1] = child1
             end
         end
         pop0, pop1 = pop1, pop0
-        best_tree, best_loss = evaluate!(loss, grammar, pop0, losses, best_tree, best_loss)
+        losses0, losses1 = losses1, losses0
+        best_tree, best_loss = evaluate!(loss, grammar, pop0, losses0, best_tree, best_loss)
     end
     ExprOptResult(best_tree, best_loss, get_executable(best_tree, grammar), nothing)
 end
@@ -138,34 +142,41 @@ function initialize(::RandomInit, pop_size::Int, grammar::Grammar, typ::Symbol, 
 end
 
 """
-    select(p::TournamentSelection, pop::Vector{RuleNode}, losses::Vector{Float64})
+    select(p::TournamentSelection, pop::Vector{RuleNode}, losses::Vector{Union{Float64,Missing}})
 
 Tournament selection.
 """
-function select(p::TournamentSelection, pop::Vector{RuleNode}, losses::Vector{Float64})
+function select(p::TournamentSelection, pop::Vector{RuleNode}, losses::Vector{Union{Float64,Missing}})
     ids = StatsBase.seqsample_c!(collect(1:length(pop)), zeros(Int, p.k)) 
-    pop[ids[1]] #assume sorted
+    i = ids[1] #assumes pop is sorted
+    pop[i], i
 end
 
 """
-    select(p::TruncationSelection, pop::Vector{RuleNode}, losses::Vector{Float64})
+    select(p::TruncationSelection, pop::Vector{RuleNode}, losses::Vector{Union{Float64,Missing}})
 
 Truncation selection.
 """
-function select(p::TruncationSelection, pop::Vector{RuleNode}, losses::Vector{Float64})
-    pop[rand(1:p.k)]
+function select(p::TruncationSelection, pop::Vector{RuleNode}, losses::Vector{Union{Float64,Missing}})
+    i = rand(1:p.k)  #assumes pop is sorted
+    pop[i], i
 end
 
 """
-    evaluate!(loss::Function, grammar::Grammar, pop::Vector{RuleNode}, losses::Vector{Float64}, 
+    evaluate!(loss::Function, grammar::Grammar, pop::Vector{RuleNode}, losses::Vector{Union{Float64,Missing}}, 
         best_tree::RuleNode, best_loss::Float64)
 
 Evaluate the loss function for population and sort.  Update the globally best tree, if needed.
 """
-function evaluate!(loss::Function, grammar::Grammar, pop::Vector{RuleNode}, losses::Vector{Float64}, 
+function evaluate!(loss::Function, grammar::Grammar, pop::Vector{RuleNode},
+                   losses::Vector{Union{Float64,Missing}}, 
                    best_tree::RuleNode, best_loss::Float64)
 
-    losses[:] = loss.(pop, Ref(grammar))
+    for (i,x) in enumerate(pop) 
+        if ismissing(losses[i])
+            losses[i] = loss(x, grammar)
+        end
+    end
     perm = sortperm(losses)
     pop[:], losses[:] = pop[perm], losses[perm]
     if losses[1] < best_loss
