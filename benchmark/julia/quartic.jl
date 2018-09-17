@@ -1,7 +1,7 @@
 module Quartic
 
 using ExprOptimization
-using Random, Statistics, BenchmarkTools
+using Random, Statistics, BenchmarkTools, CPUTime, Statistics
 using ExprOptimization.GeneticPrograms: RandomInit, TournamentSelection
 
 const grammar = @grammar begin
@@ -31,7 +31,7 @@ end
 
 const S = SymbolTable(grammar, Quartic)
 
-function main(seed::Int=0)
+function runonce(seed::Int=0)
     Random.seed!(seed)
 
     init_method = RandomInit()
@@ -46,6 +46,18 @@ function main(seed::Int=0)
                        select_method=select_method)
     result = optimize(p, grammar, :R, loss)
     result
+end
+
+function main()
+    runonce()  #precompile
+    times = Float64[]
+    for i = 1:20
+        tstart = CPUtime_us()
+        runonce(i)
+        push!(times, CPUtime_us() - tstart)
+    end
+    ts = times .* 1e-6 #convert to seconds
+    mean(ts), std(ts), ts
 end
 
 end

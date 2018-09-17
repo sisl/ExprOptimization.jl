@@ -17,7 +17,7 @@ abstract type InitializationMethod end
 Cross Entropy method.
 # Arguments
 - `pop_size::Int`: population size
-- `iiterations::Int`: number of iterations
+- `iterations::Int`: number of iterations
 - `max_depth::Int`: maximum depth of derivation tree
 - `top_k::Int`: top k elite samples used in selection
 - `p_init::Float64`: initial value when fitting MLE 

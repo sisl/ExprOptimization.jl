@@ -16,6 +16,7 @@
 import operator
 import math
 import random
+import time
 
 import numpy
 
@@ -73,26 +74,34 @@ toolbox.register("mutate", gp.mutUniform, expr=toolbox.expr_mut, pset=pset)
 toolbox.decorate("mate", gp.staticLimit(key=operator.attrgetter("height"), max_value=10))
 toolbox.decorate("mutate", gp.staticLimit(key=operator.attrgetter("height"), max_value=10))
 
-def main():
-    random.seed(318)
+def runonce(i):
+    random.seed(i)
 
     pop = toolbox.population(n=300)
     hof = tools.HallOfFame(1)
     
-    stats_fit = tools.Statistics(lambda ind: ind.fitness.values)
-    stats_size = tools.Statistics(len)
-    mstats = tools.MultiStatistics(fitness=stats_fit, size=stats_size)
-    mstats.register("avg", numpy.mean)
-    mstats.register("std", numpy.std)
-    mstats.register("min", numpy.min)
-    mstats.register("max", numpy.max)
+    #stats_fit = tools.Statistics(lambda ind: ind.fitness.values)
+    #stats_size = tools.Statistics(len)
+    #mstats = tools.MultiStatistics(fitness=stats_fit, size=stats_size)
+    #mstats.register("avg", numpy.mean)
+    #mstats.register("std", numpy.std)
+    #mstats.register("min", numpy.min)
+    #mstats.register("max", numpy.max)
 
-    pop, log = algorithms.eaSimple(pop, toolbox, 0.5, 0.1, 40, stats=mstats,
-                                   halloffame=hof, verbose=True)
+    pop, log = algorithms.eaSimple(pop, toolbox, 0.5, 0.1, 40, #stats=mstats,
+                                   halloffame=hof, verbose=False)
 
     print str(hof[0])
     # print log
     return pop, log, hof
+
+def main():
+    times = []
+    for i in range(1, 21):
+        tstart = time.clock()  #seconds
+        runonce(i)
+        times.append(time.clock() - tstart)
+    return numpy.mean(times), numpy.std(times), times
 
 if __name__ == "__main__":
     main()
