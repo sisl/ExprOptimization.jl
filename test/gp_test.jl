@@ -21,7 +21,7 @@ let
     iter = ExpressionIterator(grammar, 2, :R)
     pop = collect(iter)
 
-    losses = Vector{Float64}(undef,length(pop))
+    losses = Vector{Union{Float64,Missing}}(undef,length(pop))
     (best_tree, best_loss) = GeneticPrograms.evaluate!(loss, grammar, pop, losses, pop[1], Inf)
     @test Core.eval(best_tree, grammar) == 1
     @test best_loss == 1
