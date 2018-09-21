@@ -17,6 +17,7 @@ import operator
 import math
 import random
 import time
+import csv
 
 import numpy
 
@@ -74,10 +75,10 @@ toolbox.register("mutate", gp.mutUniform, expr=toolbox.expr_mut, pset=pset)
 toolbox.decorate("mate", gp.staticLimit(key=operator.attrgetter("height"), max_value=10))
 toolbox.decorate("mutate", gp.staticLimit(key=operator.attrgetter("height"), max_value=10))
 
-def runonce(i):
+def runonce(i, n_pop):
     random.seed(i)
 
-    pop = toolbox.population(n=300)
+    pop = toolbox.population(n=n_pop)
     hof = tools.HallOfFame(1)
     
     #stats_fit = tools.Statistics(lambda ind: ind.fitness.values)
@@ -96,12 +97,25 @@ def runonce(i):
     return pop, log, hof
 
 def main():
-    times = []
-    for i in range(1, 21):
-        tstart = time.clock()  #seconds
-        runonce(i)
-        times.append(time.clock() - tstart)
-    return numpy.mean(times), numpy.std(times), times
+    n_seeds = 50
+    with open('../deap_quartic.csv', 'wb') as csvfile:
+        w = csv.writer(csvfile)
+        w.writerow(['system', 'problem', 'n_seeds', 'n_pop', 'mean_time_s', 'std_time_s', 'mean_fitness', 'std_fitness'])
+
+        pop_sizes = [1000]
+        for n_pop in pop_sizes:
+            ts = []
+            fitnesses = []
+            for i in range(0, n_seeds):
+                tstart = time.clock()  #seconds
+                pop, log, hof = runonce(i, n_pop)
+                ts.append(time.clock() - tstart)
+                fitnesses.append(hof[0].fitness.getValues()[0])
+            mean_time_s = numpy.mean(ts)
+            std_time_s = numpy.std(ts)
+            mean_fitness = numpy.mean(fitnesses)
+            std_fitness= numpy.std(fitnesses)
+            w.writerow(['deap', 'quartic', n_seeds, n_pop, mean_time_s, std_time_s, mean_fitness, std_fitness])
 
 if __name__ == "__main__":
     main()
