@@ -293,9 +293,9 @@ function evaluate!(p::GrammaticalEvolution, grammar::Grammar, typ::Symbol, loss:
                    pop::Vector{Vector{Int}}, losses::Vector{Union{Float64,Missing}}, best_tree::RuleNode, 
                    best_loss::Float64)
 
-    for (i,x) in enumerate(pop) 
+    for i in eachindex(pop) 
         if ismissing(losses[i])
-            decoded = decode(x, grammar, typ)
+            decoded = decode(pop[i], grammar, typ)
             losses[i] = depth(decoded.node) > p.max_depth ?  Inf : loss(decoded.node, grammar)
         end
     end

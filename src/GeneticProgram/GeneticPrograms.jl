@@ -172,9 +172,9 @@ function evaluate!(loss::Function, grammar::Grammar, pop::Vector{RuleNode},
                    losses::Vector{Union{Float64,Missing}}, 
                    best_tree::RuleNode, best_loss::Float64)
 
-    for (i,x) in enumerate(pop) 
+    for i in eachindex(pop) 
         if ismissing(losses[i])
-            losses[i] = loss(x, grammar)
+            losses[i] = loss(pop[i], grammar)
         end
     end
     perm = sortperm(losses)
