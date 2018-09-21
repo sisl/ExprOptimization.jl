@@ -147,31 +147,35 @@ function grammatical_evolution(p::GrammaticalEvolution, grammar::Grammar, typ::S
 
     pop0 = initialize(p.pop_size, p.init_gene_length) 
     pop1 = [Int[] for i=1:p.pop_size]
-    losses = Vector{Float64}(undef,p.pop_size)
+    losses0 = Vector{Union{Float64,Missing}}(missing,p.pop_size)
+    losses1 = Vector{Union{Float64,Missing}}(missing,p.pop_size)
 
-    best_tree, best_loss = evaluate!(p, grammar, typ, loss, pop0, losses, RuleNode(0), Inf)
+    best_tree, best_loss = evaluate!(p, grammar, typ, loss, pop0, losses0, RuleNode(0), Inf)
     for iter = 1:p.iterations 
+        fill!(losses1, missing)
         i = 0
         while i < p.pop_size
             op = sample(OPERATORS, p.p_operators)
             if op == :reproduction
-                ind1 = select(p.select_method, pop0, losses)
-                pop1[i+=1] = deepcopy(ind1)
+                ind1,j = select(p.select_method, pop0, losses0)
+                pop1[i+=1] = ind1
+                losses1[i] = losses0[j]
             elseif op == :crossover
-                ind1 = select(p.select_method, pop0, losses)
-                ind2 = select(p.select_method, pop0, losses)
+                ind1,_ = select(p.select_method, pop0, losses0)
+                ind2,_ = select(p.select_method, pop0, losses0)
                 child = crossover(ind1, ind2)
                 limit_length!(child, p.max_gene_length)
                 pop1[i+=1] = child
             elseif op == :mutation
-                ind1 = select(p.select_method, pop0, losses)
+                ind1,_ = select(p.select_method, pop0, losses0)
                 child1 = mutation(p.mutate_method, ind1)
                 limit_length!(child1, p.max_gene_length)
                 pop1[i+=1] = child1
             end
         end
         pop0, pop1 = pop1, pop0
-        best_tree, best_loss = evaluate!(p, grammar, typ, loss, pop0, losses, best_tree, best_loss)
+        losses0, losses1 = losses1, losses0
+        best_tree, best_loss = evaluate!(p, grammar, typ, loss, pop0, losses0, best_tree, best_loss)
     end
     ExprOptResult(best_tree, best_loss, get_executable(best_tree, grammar), nothing)
 end
@@ -194,22 +198,24 @@ function limit_length!(ind::Vector{Int}, max_length::Int)
 end
 
 """
-    select(p::TournamentSelection, pop::Vector{RuleNode}, losses::Vector{Float64})
+    select(p::TournamentSelection, pop::Vector{RuleNode}, losses::Vector{Union{Float64,Missing}})
 
 Tournament selection.
 """
-function select(p::TournamentSelection, pop::Vector{Vector{Int}}, losses::Vector{Float64})
-    ids = StatsBase.seqsample_c!(collect(1:length(pop)), zeros(Int, p.k)) 
-    pop[ids[1]] #assume sorted
+function select(p::TournamentSelection, pop::Vector{Vector{Int}}, losses::Vector{Union{Float64,Missing}})
+    ids = StatsBase.sample(1:length(pop), p.k; replace=false, ordered=true) 
+    i = ids[1] #assumes pop is sorted
+    pop[i], i
 end
 
 """
-    select(p::TruncationSelection, pop::Vector{RuleNode}, losses::Vector{Float64})
+    select(p::TruncationSelection, pop::Vector{RuleNode}, losses::Vector{Union{Float64,Missing}})
 
 Truncation selection.
 """
-function select(p::TruncationSelection, pop::Vector{Vector{Int}}, losses::Vector{Float64})
-    pop[rand(1:p.k)]
+function select(p::TruncationSelection, pop::Vector{Vector{Int}}, losses::Vector{Union{Float64,Missing}})
+    i = rand(1:p.k)  #assumes pop is sorted
+    pop[i], i
 end
 
 """
@@ -279,18 +285,21 @@ function mutation(p::MultiMutate, child::Vector{Int})
 end
 
 """
-    evaluate!(p::GrammaticalEvolution, grammar::Grammar, typ::Symbol, loss::Function, pop::Vector{RuleNode}, losses::Vector{Float64}, best_tree::RuleNode, best_loss::Float64)
+    evaluate!(p::GrammaticalEvolution, grammar::Grammar, typ::Symbol, loss::Function, pop::Vector{RuleNode}, losses::Vector{Union{Float64}}, best_tree::RuleNode, best_loss::Float64)
 
 Evaluate the loss function for population and sort.  Update the globally best tree, if needed.
 """
 function evaluate!(p::GrammaticalEvolution, grammar::Grammar, typ::Symbol, loss::Function,
-                   pop::Vector{Vector{Int}}, losses::Vector{Float64}, best_tree::RuleNode, 
+                   pop::Vector{Vector{Int}}, losses::Vector{Union{Float64,Missing}}, best_tree::RuleNode, 
                    best_loss::Float64)
 
-    for i in eachindex(losses)
-        decoded = decode(pop[i], grammar, typ)
-        losses[i] = depth(decoded.node) > p.max_depth ?  Inf : loss(decoded.node, grammar)
+    for (i,x) in enumerate(pop) 
+        if ismissing(losses[i])
+            decoded = decode(x, grammar, typ)
+            losses[i] = depth(decoded.node) > p.max_depth ?  Inf : loss(decoded.node, grammar)
+        end
     end
+
     perm = sortperm(losses)
     pop[:], losses[:] = pop[perm], losses[perm]
     if losses[1] < best_loss

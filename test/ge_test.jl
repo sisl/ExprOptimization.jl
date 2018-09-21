@@ -21,7 +21,7 @@ let
     pop = GrammaticalEvolutions.initialize(p.pop_size, p.init_gene_length)
     node = GrammaticalEvolutions.decode(pop[1], grammar, :R).node
 
-    losses = Vector{Float64}(undef,length(pop))
+    losses = Vector{Union{Float64,Missing}}(undef,length(pop))
     (best_tree, best_loss) = GrammaticalEvolutions.evaluate!(p, grammar, :R, loss, pop, losses, node, Inf)
     @test Core.eval(best_tree, grammar) == 1
     @test best_loss == 1
