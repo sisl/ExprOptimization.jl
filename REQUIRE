@@ -3,3 +3,6 @@ ExprRules
 Reexport
 StatsBase
 AbstractTrees
+CPUTime
+DataFrames
+CSV
