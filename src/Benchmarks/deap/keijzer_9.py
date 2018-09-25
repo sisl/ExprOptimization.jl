@@ -45,7 +45,7 @@ def evalSymbReg(individual):
     func = toolbox.compile(expr=individual)
     los = 0.0
     n = 0
-    for x in numpy.arange(0.0,100.0,1.0):
+    for x in numpy.arange(0.0,101.0,1.0):
         los += (func(x) - gt(x))**2 
         n += 1
     return los / n, 

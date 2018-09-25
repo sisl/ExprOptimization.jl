@@ -93,7 +93,7 @@ def runonce(i, n_pop):
 
 def main():
     n_seeds = 50
-    with open('../deap_approximate_pi.csv', 'wb') as csvfile:
+    with open('../results/deap_approximate_pi.csv', 'wb') as csvfile:
         w = csv.writer(csvfile)
         w.writerow(['system', 'problem', 'n_seeds', 'n_pop', 'mean_time_s', 'std_time_s', 'mean_fitness', 'std_fitness'])
 

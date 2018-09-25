@@ -18,7 +18,7 @@ function grammar_simple_calculator(; erc=false)
 end
 
 
-function loss_approximate_pi(tree::RuleNode, grammar::Grammar)
+function loss_approximate_pi(S::SymbolTable, tree::RuleNode, grammar::Grammar)
     ex = get_executable(tree, grammar)
     value = Core.eval(S, ex)
     if isinf(value) || isnan(value)
@@ -32,7 +32,8 @@ function run_approximate_pi(seed::Int=0, n_pop::Int=300)
     Random.seed!(seed)
 
     grammar = grammar_simple_calculator(erc=false)
-    loss(tree::RuleNode, grammar::Grammar) = loss_approximate_pi(tree, grammar)
+    S = SymbolTable(grammar, ExprOptimization.Benchmarks)
+    loss(tree::RuleNode, grammar::Grammar) = loss_approximate_pi(S, tree, grammar)
 
     init_method = RandomInit()
     select_method = TournamentSelection(3)

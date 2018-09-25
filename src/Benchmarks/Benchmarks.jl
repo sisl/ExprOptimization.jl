@@ -1,3 +1,13 @@
+"""
+Benchmarks for ExprOptimization.jl
+This will run the julia benchmarks:
+using ExprOptimization
+ExprOptimization.Benchmarks.main()
+See subfolders for the benchmarks of baseline packages
+Results are placed in RESULTSDIR
+Call load_csvs() to load up a merged dataframe.
+See Julia notebook for plots.
+"""
 module Benchmarks
 
 using ExprOptimization
@@ -20,7 +30,7 @@ include("approximate_pi.jl")
 main_koza_1() = main_timing(run_koza_1, 50, [1000], "koza_1", "exproptimization_koza_1.csv")
 main_keijzer_9() = main_timing(run_keijzer_9, 50, [1000], "keijzer_9", "exproptimization_keijzer_9.csv")
 main_vladislavleva_3() = main_timing(run_vladislavleva_3, 50, [500], "vladislavleva_3", "exproptimization_vladislavleva_3.csv")
-main_approximate_pi() = main_timing(run_approximate_pi, 50, [1000], "approximatE_pi", "exproptimization_approximate_pi.csv")
+main_approximate_pi() = main_timing(run_approximate_pi, 50, [1000], "approximate_pi", "exproptimization_approximate_pi.csv")
 
 function log_df()
     df = DataFrame([String,String,Int,Int,Float64,Float64,Float64,Float64], 
@@ -46,9 +56,18 @@ function main_timing(f::Function, n_seeds, pop_sizes, problem::String, outfile::
 end
 
 function load_csvs()
-    fs = filter(x->endswith(x,".csv"), readdir(RESULTSDIR))
-    df = vcat([CSV.read(joinpath(RESULTSDIR,f)) for f in fs]...)
+    fs = filter(x->endswith(x,".csv"), readdir(RESULTSDIR)) 
+    fs = map(f->joinpath(RESULTSDIR,f), fs)
+    fs = filter(f->filesize(f)>0, fs)   #ignore empty files
+    df = vcat([CSV.read(f) for f in fs]...)
     df
+end
+
+function main_deap()
+    dir = pwd()
+    cd(joinpath(@__DIR__, "deap"))
+    success(`./main.sh`)
+    cd(dir)
 end
 
 function main()
@@ -56,6 +75,7 @@ function main()
     main_keijzer_9()
     main_vladislavleva_3()
     main_approximate_pi()
+    main_deap()
 end
 
 

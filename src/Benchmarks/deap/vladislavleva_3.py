@@ -87,8 +87,8 @@ def evalSymbReg(individual):
     func = toolbox.compile(expr=individual)
     los = 0.0
     n = 0
-    for x in numpy.arange(0.05,10.0,0.1):
-        for y in numpy.arange(0.05,10.05,2.0):
+    for x in numpy.arange(0.05,10.1,0.1):
+        for y in numpy.arange(0.05,12.05,2.0):
             los += protectedPow(func(x,y) - gt(x,y), 2)
             n += 1
     return los / n, 
