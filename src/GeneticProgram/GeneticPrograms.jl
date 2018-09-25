@@ -147,8 +147,8 @@ end
 Tournament selection.
 """
 function select(p::TournamentSelection, pop::Vector{RuleNode}, losses::Vector{Union{Float64,Missing}})
-    ids = StatsBase.sample(1:length(pop), p.k; replace=false, ordered=true) 
-    i = ids[1] #assumes pop is sorted
+    ids = StatsBase.sample(1:length(pop), p.k; replace=false, ordered=false) 
+    i = minimum(ids) 
     pop[i], i
 end
 
