@@ -5,6 +5,7 @@ function grammar_vladislavleva_c(; erc=false)
     grammar = erc ? 
         (@grammar begin
             R = x
+            R = y
             R = R + R
             R = R - R
             R = R * R
@@ -21,6 +22,7 @@ function grammar_vladislavleva_c(; erc=false)
         end) : 
         (@grammar begin
             R = x
+            R = y
             R = R + R
             R = R - R
             R = R * R
@@ -47,7 +49,7 @@ function loss_vladislavleva_3(S::SymbolTable, tree::RuleNode, grammar::Grammar)
     for x in 0.05:0.1:10.0, y in 0.05:2.0:10.05
         S[:x] = x
         S[:y] = y
-        los += abs2(Core.eval(S,ex) - gt_vladislavleva_3(x))
+        los += abs2(Core.eval(S,ex) - gt_vladislavleva_3(x,y))
         n += 1
     end
     los / n

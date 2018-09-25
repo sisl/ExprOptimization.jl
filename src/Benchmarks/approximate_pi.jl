@@ -31,7 +31,7 @@ end
 function run_approximate_pi(seed::Int=0, n_pop::Int=300)
     Random.seed!(seed)
 
-    grammar = grammar_simple_calculator(erc=true)
+    grammar = grammar_simple_calculator(erc=false)
     loss(tree::RuleNode, grammar::Grammar) = loss_approximate_pi(tree, grammar)
 
     init_method = RandomInit()

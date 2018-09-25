@@ -12,9 +12,14 @@ protectedDiv(x, y) = iszero(y) ? 1.0 : x / y
 protectedSin(x) = isinf(x) ? 0.0 : sin(x)
 protectedCos(x) = isinf(x) ? 1.0 : cos(x)
 
+include("koza.jl")
+include("keijzer.jl")
+include("vladislavleva.jl")
+include("approximate_pi.jl")
+
 main_koza_1() = main_timing(run_koza_1, 50, [1000], "koza_1", "exproptimization_koza_1.csv")
 main_keijzer_9() = main_timing(run_keijzer_9, 50, [1000], "keijzer_9", "exproptimization_keijzer_9.csv")
-main_vladislavleva_3() = main_timing(run_vladislavleva_3, 50, [1000], "vladislavleva_3", "exproptimization_vladislavleva_3.csv")
+main_vladislavleva_3() = main_timing(run_vladislavleva_3, 50, [500], "vladislavleva_3", "exproptimization_vladislavleva_3.csv")
 main_approximate_pi() = main_timing(run_approximate_pi, 50, [1000], "approximatE_pi", "exproptimization_approximate_pi.csv")
 
 function log_df()
