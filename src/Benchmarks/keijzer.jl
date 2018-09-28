@@ -29,13 +29,12 @@ gt_keijzer_9(x) = log(x + sqrt(x^2+1)) #arcsinh(x)
 function loss_keijzer_9(S::SymbolTable, tree::RuleNode, grammar::Grammar)
     ex = get_executable(tree, grammar)
     los = 0.0
-    n = 0
-    for x in 0.0:1.0:100.0
+    rng = 0.0:1.0:100.0
+    for x in rng 
         S[:x] = x
         los += abs2(Core.eval(S,ex) - gt_keijzer_9(x))
-        n += 1
     end
-    los / n
+    los / length(rng) 
 end
 
 function run_keijzer_9(seed::Int=0, n_pop::Int=300)

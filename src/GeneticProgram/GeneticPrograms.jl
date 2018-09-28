@@ -97,6 +97,7 @@ Three operators are implemented: reproduction, crossover, and mutation.
 """
 function genetic_program(p::GeneticProgram, grammar::Grammar, typ::Symbol, loss::Function)
     dmap = mindepth_map(grammar)
+    bin = NodeRecycler(p.pop_size*p.max_depth*50)
     pop0 = initialize(p.init_method, p.pop_size, grammar, typ, dmap, p.max_depth)
     pop1 = Vector{RuleNode}(undef,p.pop_size)
     losses0 = Vector{Union{Float64,Missing}}(missing,p.pop_size)
@@ -110,29 +111,33 @@ function genetic_program(p::GeneticProgram, grammar::Grammar, typ::Symbol, loss:
             op = sample(OPERATORS, p.p_operators)
             if op == :reproduction
                 ind1,j = select(p.select_method, pop0, losses0)
-                pop1[i+=1] = ind1
+                pop1[i+=1] = deepcopy(bin, ind1)
                 losses1[i] = losses0[j]
             elseif op == :crossover
                 ind1,_ = select(p.select_method, pop0, losses0)
                 ind2,_ = select(p.select_method, pop0, losses0)
-                child = crossover(ind1, ind2, grammar, p.max_depth)
+                child = crossover(ind1, ind2, grammar, p.max_depth, bin)
                 pop1[i+=1] = child
             elseif op == :mutation
                 ind1,_ = select(p.select_method, pop0, losses0)
-                child1 = mutation(ind1, grammar, dmap, p.max_depth)
+                child1 = mutation(ind1, grammar, dmap, p.max_depth, bin)
                 pop1[i+=1] = child1
             end
         end
         pop0, pop1 = pop1, pop0
         losses0, losses1 = losses1, losses0
         best_tree, best_loss = evaluate!(loss, grammar, pop0, losses0, best_tree, best_loss)
+
+        #recycle unused rulenodes
+        for j = 1:length(pop1)
+            recycle!(bin, pop1[j])
+        end
     end
     ExprOptResult(best_tree, best_loss, get_executable(best_tree, grammar), nothing)
 end
 
 """
-    initialize(::RandomInit, pop_size::Int, grammar::Grammar, typ::Symbol, dmap::AbstractVector{Int}, 
-max_depth::Int)
+    initialize(::RandomInit, pop_size::Int, grammar::Grammar, typ::Symbol, dmap::AbstractVector{Int}, max_depth::Int)
 
 Random population initialization.
 """
@@ -180,7 +185,7 @@ function evaluate!(loss::Function, grammar::Grammar, pop::Vector{RuleNode},
     perm = sortperm(losses)
     pop[:], losses[:] = pop[perm], losses[perm]
     if losses[1] < best_loss
-        best_tree, best_loss = pop[1], losses[1]
+        best_tree, best_loss = deepcopy(pop[1]), losses[1]
     end
     (best_tree, best_loss)
 end
@@ -190,15 +195,16 @@ end
 
 Crossover genetic operator.  Pick a random node from 'a', then pick a random node from 'b' that has the same type, then replace the subtree 
 """
-function crossover(a::RuleNode, b::RuleNode, grammar::Grammar, max_depth::Int=typemax(Int))
-    child = deepcopy(a)
+function crossover(a::RuleNode, b::RuleNode, grammar::Grammar, max_depth::Int=typemax(Int), 
+    bin::Union{NodeRecycler,Nothing}=nothing)
+    child = deepcopy(bin, a)
     crosspoint = sample(b)
     typ = return_type(grammar, crosspoint.ind)
     d_subtree = depth(crosspoint)
     d_max = max_depth + 1 - d_subtree 
     if d_max > 0 && contains_returntype(child, grammar, typ, d_max)
         loc = sample(NodeLoc, child, typ, grammar, d_max)
-        insert!(child, loc, deepcopy(crosspoint))
+        insert!(child, loc, deepcopy(bin, crosspoint))
     end
     child 
 end
@@ -208,15 +214,16 @@ end
 
 Mutation genetic operator.  Pick a random node from 'a', then replace the subtree with a random one.
 """
-function mutation(a::RuleNode, grammar::Grammar, dmap::AbstractVector{Int}, max_depth::Int=5)
-    child = deepcopy(a)
+function mutation(a::RuleNode, grammar::Grammar, dmap::AbstractVector{Int}, max_depth::Int=5,
+    bin::Union{NodeRecycler,Nothing}=nothing)
+    child = deepcopy(bin, a)
     loc = sample(NodeLoc, child)
     mutatepoint = get(child, loc) 
     typ = return_type(grammar, mutatepoint.ind)
     d_node = node_depth(child, mutatepoint)
     d_max = max_depth + 1 - d_node
     if d_max > 0
-        subtree = rand(RuleNode, grammar, typ, dmap, d_max)
+        subtree = rand(RuleNode, grammar, typ, dmap, d_max, bin)
         insert!(child, loc, subtree)
     end
     child
