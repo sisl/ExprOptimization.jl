@@ -70,11 +70,15 @@ function main_deap()
     cd(dir)
 end
 
-function main()
+function main_julia()
     main_koza_1()
     main_keijzer_9()
     main_vladislavleva_3()
     main_approximate_pi()
+end
+
+function main()
+    main_julia()
     main_deap()
 end
 

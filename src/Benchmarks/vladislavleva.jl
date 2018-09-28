@@ -41,16 +41,18 @@ function grammar_vladislavleva_c(; erc=false)
 end
 
 
-gt_vladislavleva_3(x,y) = exp(-x)*x^3*(protectedCos(x)*protectedSin(x))*(protectedCos(x)*protectedSin(x)^2-1)*(y-5)
+gt_vladislavleva_3(x::Float64, y::Float64) = exp(-x)*x^3*(protectedCos(x)*protectedSin(x))*(protectedCos(x)*protectedSin(x)^2-1)*(y-5)
 function loss_vladislavleva_3(S::SymbolTable, tree::RuleNode, grammar::Grammar)
     ex = get_executable(tree, grammar)
     los = 0.0
     n = 0
-    for x in 0.05:0.1:10.0, y in 0.05:2.0:10.05
+    for x in 0.05:0.1:10.0 
         S[:x] = x
-        S[:y] = y
-        los += abs2(Core.eval(S,ex) - gt_vladislavleva_3(x,y))
-        n += 1
+        for y in 0.05:2.0:10.05
+            S[:y] = y
+            los += abs2(Core.eval(S,ex)::Float64 - gt_vladislavleva_3(x,y))
+            n += 1
+        end
     end
     los / n
 end

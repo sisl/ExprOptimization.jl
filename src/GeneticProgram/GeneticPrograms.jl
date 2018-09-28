@@ -102,16 +102,18 @@ function genetic_program(p::GeneticProgram, grammar::Grammar, typ::Symbol, loss:
     pop1 = Vector{RuleNode}(undef,p.pop_size)
     losses0 = Vector{Union{Float64,Missing}}(missing,p.pop_size)
     losses1 = Vector{Union{Float64,Missing}}(missing,p.pop_size)
+    saveset = Set{Int}()
 
     best_tree, best_loss = evaluate!(loss, grammar, pop0, losses0, pop0[1], Inf)
     for iter = 1:p.iterations
         fill!(losses1, missing)
+        empty!(saveset)
         i = 0
         while i < p.pop_size
             op = sample(OPERATORS, p.p_operators)
             if op == :reproduction
                 ind1,j = select(p.select_method, pop0, losses0)
-                pop1[i+=1] = deepcopy(bin, ind1)
+                pop1[i+=1] = (j in saveset) ? deepcopy(bin, ind1) : (push!(saveset,j); ind1)
                 losses1[i] = losses0[j]
             elseif op == :crossover
                 ind1,_ = select(p.select_method, pop0, losses0)
@@ -130,7 +132,7 @@ function genetic_program(p::GeneticProgram, grammar::Grammar, typ::Symbol, loss:
 
         #recycle unused rulenodes
         for j = 1:length(pop1)
-            recycle!(bin, pop1[j])
+            (j in saveset) || recycle!(bin, pop1[j])
         end
     end
     ExprOptResult(best_tree, best_loss, get_executable(best_tree, grammar), nothing)

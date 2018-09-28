@@ -25,14 +25,14 @@ function grammar_keijzer(; erc=false)
     grammar
 end
 
-gt_keijzer_9(x) = log(x + sqrt(x^2+1)) #arcsinh(x)
+gt_keijzer_9(x::Float64) = log(x + sqrt(x^2+1)) #arcsinh(x)
 function loss_keijzer_9(S::SymbolTable, tree::RuleNode, grammar::Grammar)
     ex = get_executable(tree, grammar)
     los = 0.0
     rng = 0.0:1.0:100.0
     for x in rng 
         S[:x] = x
-        los += abs2(Core.eval(S,ex) - gt_keijzer_9(x))
+        los += abs2(Core.eval(S,ex)::Float64 - gt_keijzer_9(x))
     end
     los / length(rng) 
 end

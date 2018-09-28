@@ -31,20 +31,19 @@ function grammar_koza(; erc=false)
     grammar
 end
 
-gt_koza_1(x) = x^4 + x^3 + x^2 + x 
-gt_koza_2(x) = x^5 - 2x^3 + x 
-gt_koza_3(x) = x^6 - 2x^4 + x^2 
+gt_koza_1(x::Float64) = x^4 + x^3 + x^2 + x 
+gt_koza_2(x::Float64) = x^5 - 2x^3 + x 
+gt_koza_3(x::Float64) = x^6 - 2x^4 + x^2 
 
 function loss_koza(gt::Function, S::SymbolTable, tree::RuleNode, grammar::Grammar)
     ex = get_executable(tree, grammar)
     los = 0.0
-    n = 0
-    for x in range(-1.0,stop=1.0,length=20) 
+    rng = range(-1.0,stop=1.0,length=20) 
+    for x in rng
         S[:x] = x
-        los += abs2(Core.eval(S,ex) - gt(x))
-        n += 1
+        los += abs2(Core.eval(S,ex)::Float64 - gt(x)::Float64)
     end
-    los / n
+    los / length(rng)
 end
 
 function run_koza_1(seed::Int=0, n_pop::Int=300)

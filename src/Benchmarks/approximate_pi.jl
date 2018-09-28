@@ -20,7 +20,7 @@ end
 
 function loss_approximate_pi(S::SymbolTable, tree::RuleNode, grammar::Grammar)
     ex = get_executable(tree, grammar)
-    value = Core.eval(S, ex)
+    value = Core.eval(S, ex)::Float64
     if isinf(value) || isnan(value)
         return Inf
     end
