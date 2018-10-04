@@ -29,7 +29,9 @@ include("approximate_pi.jl")
 
 main_koza_1() = main_timing(run_koza_1, 50, [1000], "koza_1", "exproptimization_koza_1.csv")
 main_keijzer_9() = main_timing(run_keijzer_9, 50, [1000], "keijzer_9", "exproptimization_keijzer_9.csv")
+main_keijzer_11() = main_timing(run_keijzer_11, 50, [500], "keijzer_11", "exproptimization_keijzer_11.csv")
 main_vladislavleva_3() = main_timing(run_vladislavleva_3, 50, [500], "vladislavleva_3", "exproptimization_vladislavleva_3.csv")
+main_vladislavleva_6() = main_timing(run_vladislavleva_6, 50, [500], "vladislavleva_6", "exproptimization_vladislavleva_6.csv")
 main_approximate_pi() = main_timing(run_approximate_pi, 50, [1000], "approximate_pi", "exproptimization_approximate_pi.csv")
 
 function log_df()
@@ -74,6 +76,8 @@ function main_julia()
     main_koza_1()
     main_keijzer_9()
     main_vladislavleva_3()
+    main_vladislavleva_6()
+    main_keijzer_11()
     main_approximate_pi()
 end
 
