@@ -26,7 +26,6 @@ function grammar_koza(; erc=false)
             R = protectedCos(R)
             R = exp(R)
             R = log(abs(R))
-            R = |(-1.0:0.25:1.0) 
         end)
     grammar
 end
@@ -34,24 +33,31 @@ end
 gt_koza_1(x::Float64) = x^4 + x^3 + x^2 + x 
 gt_koza_2(x::Float64) = x^5 - 2x^3 + x 
 gt_koza_3(x::Float64) = x^6 - 2x^4 + x^2 
+const KOZA_XS = range(-1.0,stop=1.0,length=20) 
+const GT_KOZA_1 = map(gt_koza_1, KOZA_XS)
+const GT_KOZA_2 = map(gt_koza_2, KOZA_XS)
+const GT_KOZA_3 = map(gt_koza_3, KOZA_XS)
+const koza_scratch = similar(GT_KOZA_1)
 
-function loss_koza(gt::Function, S::SymbolTable, tree::RuleNode, grammar::Grammar)
+loss_koza_1(S::SymbolTable, tree::RuleNode, grammar::Grammar) = loss_koza(GT_KOZA_1, S, tree, grammar)
+loss_koza_2(S::SymbolTable, tree::RuleNode, grammar::Grammar) = loss_koza(GT_KOZA_2, S, tree, grammar)
+loss_koza_3(S::SymbolTable, tree::RuleNode, grammar::Grammar) = loss_koza(GT_KOZA_3, S, tree, grammar)
+function loss_koza(gt_vec::Vector{Float64}, S::SymbolTable, tree::RuleNode, grammar::Grammar)
     ex = get_executable(tree, grammar)
-    los = 0.0
-    rng = range(-1.0,stop=1.0,length=20) 
-    for x in rng
-        S[:x] = x
-        los += abs2(Core.eval(S,ex)::Float64 - gt(x)::Float64)
+    for i = 1:length(KOZA_XS)
+        S[:x] = KOZA_XS[i] 
+        koza_scratch[i] = Core.eval(S, ex)::Float64
     end
-    los / length(rng)
+    los = sum(abs.(koza_scratch .- gt_vec))
+    los
 end
 
 function run_koza_1(seed::Int=0, n_pop::Int=300)
     Random.seed!(seed)
 
-    grammar = grammar_koza(erc=true)
+    grammar = grammar_koza(erc=false)
     S = SymbolTable(grammar, ExprOptimization.Benchmarks)
-    loss(tree::RuleNode, grammar::Grammar) = loss_koza(gt_koza_1, S, tree, grammar)
+    loss(tree::RuleNode, grammar::Grammar) = loss_koza_1(S, tree, grammar)
 
     init_method = RandomInit()
     select_method = TournamentSelection(3)

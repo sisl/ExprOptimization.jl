@@ -11,7 +11,7 @@ See Julia notebook for plots.
 module Benchmarks
 
 using ExprOptimization
-using Random, CPUTime, DataFrames, CSV, Statistics
+using Random, CPUTime, DataFrames, CSV, Statistics, StaticArrays
 using ExprOptimization.GeneticPrograms: RandomInit, TournamentSelection
 
 const RESULTSDIR = joinpath(@__DIR__, "results")

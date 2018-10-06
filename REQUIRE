@@ -6,3 +6,4 @@ AbstractTrees
 CPUTime
 DataFrames
 CSV
+StaticArrays
