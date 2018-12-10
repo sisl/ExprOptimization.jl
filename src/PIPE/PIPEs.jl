@@ -41,11 +41,13 @@ struct PIPE <: ExprOptAlgorithm
 end
 
 """
-    optimize(p::PIPE, grammar::Grammar, typ::Symbol, loss::Function)
+    optimize(p::PIPE, grammar::Grammar, typ::Symbol, loss::Function; kwargs...)
 
 Expression tree optimization using the PIPE algorithm with parameters p, grammar 'grammar', start symbol typ, and loss function 'loss'.  Loss function has the form: los::Float64=loss(node::RuleNode, grammar::Grammar).
 """
-optimize(p::PIPE, grammar::Grammar, typ::Symbol, loss::Function) = pipe(p, grammar, typ, loss)
+function optimize(p::PIPE, grammar::Grammar, typ::Symbol, loss::Function) 
+    pipe(p, grammar, typ, loss; kwargs...)
+end
 
 """
     pipe(p::PIPE, grammar::Grammar, typ::Symbol, loss::Function)

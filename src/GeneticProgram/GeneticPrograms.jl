@@ -79,11 +79,13 @@ end
 TruncationSelection() = TruncationSelection(100)
 
 """
-    optimize(p::GeneticProgram, grammar::Grammar, typ::Symbol, loss::Function)
+    optimize(p::GeneticProgram, grammar::Grammar, typ::Symbol, loss::Function; kwargs...)
 
 Expression tree optimization using genetic programming with parameters p, grammar 'grammar', and start symbol typ, and loss function 'loss'.  Loss function has the form: los::Float64=loss(node::RuleNode, grammar::Grammar).
 """
-optimize(p::GeneticProgram, grammar::Grammar, typ::Symbol, loss::Function) = genetic_program(p, grammar, typ, loss)
+function optimize(p::GeneticProgram, grammar::Grammar, typ::Symbol, loss::Function; kwargs...) 
+    genetic_program(p, grammar, typ, loss; kwargs...)
+end
 
 """
     genetic_program(p::GeneticProgram, grammar::Grammar, typ::Symbol, loss::Function)
@@ -95,7 +97,8 @@ Koza, "Genetic programming: on the programming of computers by means of natural 
 
 Three operators are implemented: reproduction, crossover, and mutation.
 """
-function genetic_program(p::GeneticProgram, grammar::Grammar, typ::Symbol, loss::Function)
+function genetic_program(p::GeneticProgram, grammar::Grammar, typ::Symbol, loss::Function; 
+    verbose::Bool=false)
     dmap = mindepth_map(grammar)
     pop0 = initialize(p.init_method, p.pop_size, grammar, typ, dmap, p.max_depth)
     pop1 = Vector{RuleNode}(undef,p.pop_size)
@@ -104,6 +107,7 @@ function genetic_program(p::GeneticProgram, grammar::Grammar, typ::Symbol, loss:
 
     best_tree, best_loss = evaluate!(loss, grammar, pop0, losses0, pop0[1], Inf)
     for iter = 1:p.iterations
+        verbose && println("iterations: $i of $(p.iterations)")
         fill!(losses1, missing)
         i = 0
         while i < p.pop_size

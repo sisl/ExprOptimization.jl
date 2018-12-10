@@ -124,15 +124,16 @@ MultiMutate(grammar::Grammar, typ::Symbol) = MultiMutate([
     GenePruning(grammar, typ)])
 
 """
-    optimize(p::GrammaticalEvolution, grammar::Grammar, typ::Symbol, loss::Function)
+    optimize(p::GrammaticalEvolution, grammar::Grammar, typ::Symbol, loss::Function; kwargs...)
 
 Grammatical Evolution algorithm with parameters p, grammar 'grammar', start symbol typ, and loss function 'loss'.  Loss function has the form: los::Float64=loss(node::RuleNode, grammar::Grammar).
 
 See: Ryan, Collins, O'Neil, "Grammatical Evolution: Evolving Programs for an Arbitrary Language", 
     in European Conference on Genetic Programming, Spring, 1998, pp. 83-96. 
 """
-optimize(p::GrammaticalEvolution, grammar::Grammar, typ::Symbol, loss::Function) = 
-    grammatical_evolution(p, grammar, typ, loss)
+function optimize(p::GrammaticalEvolution, grammar::Grammar, typ::Symbol, loss::Function; kwargs...) 
+    grammatical_evolution(p, grammar, typ, loss; kwargs...)
+end
 
 """
     grammatical_evolution(p::GrammaticalEvolution, grammar::Grammar, typ::Symbol, loss::Function)
@@ -142,7 +143,8 @@ Grammatical Evolution algorithm with parameters p, grammar 'grammar', start symb
 See: Ryan, Collins, O'Neil, "Grammatical Evolution: Evolving Programs for an Arbitrary Language", 
     in European Conference on Genetic Programming, Spring, 1998, pp. 83-96. 
 """
-function grammatical_evolution(p::GrammaticalEvolution, grammar::Grammar, typ::Symbol, loss::Function)
+function grammatical_evolution(p::GrammaticalEvolution, grammar::Grammar, typ::Symbol, 
+    loss::Function)
     iseval(grammar) && error("Grammatical Evolution does not support _() functions in the grammar")
 
     pop0 = initialize(p.pop_size, p.init_gene_length) 
