@@ -11,6 +11,7 @@ export
         optimize,
         ExprOptAlgorithm,
         ExprOptResult,
+        get_expr,
 
         ProbabilisticExprRules,
         PPTs,
@@ -50,11 +51,19 @@ struct ExprOptResult
 end
 
 """
-    optimize(p::ExprOptAlgorithm, grammar::Grammar, typ::Symbol, loss::Function)
+    optimize(p::ExprOptAlgorithm, grammar::Grammar, typ::Symbol, loss::Function; kwargs...)
 
 Main entry for expression optimization.  Use concrete ExprOptAlgorithm to specify optimization algorithm. Optimize using grammar and start symbol, typ, and loss function.  Loss function has the form: los::Float64=loss(node::RuleNode).
 """
 function optimize end   #implemented by algorithms
+
+"""
+    get_expr(result::ExprOptResult) 
+
+Returns the expression in the result
+"""
+get_expr(result::ExprOptResult) = result.expr
+get_expr(x::Nothing) = nothing
 
 #############################################################################
 # Common base modules
