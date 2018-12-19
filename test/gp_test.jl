@@ -22,7 +22,7 @@ let
     pop = collect(iter)
 
     losses = Vector{Union{Float64,Missing}}(undef,length(pop))
-    (best_tree, best_loss) = GeneticPrograms.evaluate!(loss, grammar, pop, losses, pop[1], Inf)
+    (best_tree, best_loss) = GeneticPrograms.evaluate!(p, loss, grammar, pop, losses, pop[1], Inf)
     @test Core.eval(best_tree, grammar) == 1
     @test best_loss == 1
 
@@ -30,5 +30,9 @@ let
     GeneticPrograms.select(p.select_method, pop, losses)
     GeneticPrograms.crossover(pop[1], pop[2],  grammar)
     GeneticPrograms.mutation(pop[3], grammar, dmap)
+
+    p = GeneticProgram(10, 5, 4, 0.3, 0.3, 0.3; track_method=GeneticPrograms.TopKTracking(3))
+    res = optimize(p, grammar, :R, loss)
+    res.alg_result[:top_k]
 end
 

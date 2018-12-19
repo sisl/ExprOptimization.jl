@@ -50,14 +50,17 @@ end
 
 function DataStructures.enqueue!(q::BoundedPriorityQueue{K,V}, k::K, v::V;
     make_copy::Bool=false) where {K,V}
-    haskey(q.pq, k) && return #keys must be unique
+    haskey(q.pq, k) && return -1 #keys must be unique, return -1 if collision
     if make_copy
         k = deepcopy(k)
     end
+    n = length(q.pq)
     enqueue!(q.pq, k, v)
+    n_add = n - length(q.pq) #number of items added
     while length(q.pq) > q.N
         dequeue!(q.pq)
     end
+    n_add
 end
 
 Base.length(q::BoundedPriorityQueue) = length(q.pq)

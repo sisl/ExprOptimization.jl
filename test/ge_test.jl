@@ -22,12 +22,18 @@ let
     node = GrammaticalEvolutions.decode(pop[1], grammar, :R).node
 
     losses = Vector{Union{Float64,Missing}}(undef,length(pop))
-    (best_tree, best_loss) = GrammaticalEvolutions.evaluate!(p, grammar, :R, loss, pop, losses, node, Inf)
+    (best_tree, best_loss) = GrammaticalEvolutions.evaluate!(p, grammar, :R, loss, pop, 
+        losses, node, Inf)
     @test Core.eval(best_tree, grammar) == 1
     @test best_loss == 1
 
     GrammaticalEvolutions.select(p.select_method, pop, losses)
     GrammaticalEvolutions.crossover(pop[1], pop[2])
     GrammaticalEvolutions.mutation(GrammaticalEvolutions.MultiMutate(grammar, :R), pop[3])
+
+    p = GrammaticalEvolution(grammar, :R, 10, 5, 5, 5, 4, 0.2, 0.4, 0.4;
+        track_method=GrammaticalEvolutions.TopKTracking(3))
+    res = optimize(p, grammar, :R, loss)
+    res.alg_result[:top_k]
 end
 

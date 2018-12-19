@@ -17,5 +17,9 @@ let
     @test res.expr == 1
     @test Core.eval(res.tree, grammar) == 1
     @test res.loss == 1 
+
+    p = MonteCarlo(20, 5; track_method=MonteCarlos.TopKTracking(3))
+    res = optimize(p, grammar, :R, loss)
+    res.alg_result[:top_k]
 end
 
