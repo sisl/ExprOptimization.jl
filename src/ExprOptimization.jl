@@ -67,8 +67,10 @@ get_expr(x::Nothing) = nothing
 
 #############################################################################
 # Common base modules
-include("ProbabilisticExprRules/ProbabilisticExprRules.jl")
+include("../contrib/BoundedPriorityQueues.jl")
+using .BoundedPriorityQueues
 
+include("ProbabilisticExprRules/ProbabilisticExprRules.jl")
 include("PPT/PPTs.jl")
 using .PPTs: PPT
 

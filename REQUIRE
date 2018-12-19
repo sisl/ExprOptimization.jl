@@ -5,4 +5,5 @@ StatsBase
 AbstractTrees
 CPUTime
 DataFrames
+DataStructures
 CSV
