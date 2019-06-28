@@ -1,4 +1,4 @@
-julia 0.7
+julia 1.0 
 ExprRules
 Reexport
 StatsBase
@@ -8,3 +8,4 @@ DataFrames
 DataStructures
 CSV
 StaticArrays
+TimerOutputs
