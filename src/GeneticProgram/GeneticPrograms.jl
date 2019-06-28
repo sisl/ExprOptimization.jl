@@ -4,7 +4,7 @@ module GeneticPrograms
 using ExprRules
 using StatsBase, Random
 
-using ExprOptimization: ExprOptAlgorithm, ExprOptResult
+using ExprOptimization: ExprOptAlgorithm, ExprOptResult, BoundedPriorityQueue, enqueue!
 import ExprOptimization: optimize
 
 export GeneticProgram
@@ -13,6 +13,7 @@ const OPERATORS = [:reproduction, :crossover, :mutation]
 
 abstract type InitializationMethod end 
 abstract type SelectionMethod end
+abstract type TrackingMethod end
 
 """
     GeneticProgram
@@ -27,6 +28,7 @@ Genetic Programming.
 - `p_mutation::Float64`: probability of mutation operator
 - `init_method::InitializationMethod`: initialization method
 - `select_method::SelectionMethod`: selection method
+- `track_method::TrackingMethod`: additional tracking, e.g., track top k exprs (default: no additional tracking) 
 """
 struct GeneticProgram <: ExprOptAlgorithm
     pop_size::Int
@@ -35,6 +37,7 @@ struct GeneticProgram <: ExprOptAlgorithm
     p_operators::Weights
     init_method::InitializationMethod
     select_method::SelectionMethod
+    track_method::TrackingMethod
 
     function GeneticProgram(
         pop_size::Int,                          #population size 
@@ -44,10 +47,11 @@ struct GeneticProgram <: ExprOptAlgorithm
         p_crossover::Float64,                   #probability of crossover operator
         p_mutation::Float64;                    #probability of mutation operator 
         init_method::InitializationMethod=RandomInit(),      #initialization method 
-        select_method::SelectionMethod=TournamentSelection())   #selection method 
+        select_method::SelectionMethod=TournamentSelection(),   #selection method 
+        track_method::TrackingMethod=NoTracking())   #tracking method 
 
         p_operators = Weights([p_reproduction, p_crossover, p_mutation])
-        new(pop_size, iterations, max_depth, p_operators, init_method, select_method)
+        new(pop_size, iterations, max_depth, p_operators, init_method, select_method, track_method)
     end
 end
 
@@ -79,6 +83,29 @@ end
 TruncationSelection() = TruncationSelection(100)
 
 """
+    NoTracking
+
+No additional tracking of expressions.
+"""
+struct NoTracking <: TrackingMethod end
+
+"""
+    TopKTracking
+
+Track the top k expressions.
+"""
+struct TopKTracking <: TrackingMethod 
+    k::Int
+    q::BoundedPriorityQueue{RuleNode,Float64}
+
+    function TopKTracking(k::Int)
+        q = BoundedPriorityQueue{RuleNode,Float64}(k,Base.Order.Reverse) #lower is better
+        obj = new(k, q)
+        obj
+    end
+end
+
+"""
     optimize(p::GeneticProgram, grammar::Grammar, typ::Symbol, loss::Function; kwargs...)
 
 Expression tree optimization using genetic programming with parameters p, grammar 'grammar', and start symbol typ, and loss function 'loss'.  Loss function has the form: los::Float64=loss(node::RuleNode, grammar::Grammar).
@@ -107,7 +134,7 @@ function genetic_program(p::GeneticProgram, grammar::Grammar, typ::Symbol, loss:
     losses1 = Vector{Union{Float64,Missing}}(missing,p.pop_size)
     saveset = Set{Int}()
 
-    best_tree, best_loss = evaluate!(loss, grammar, pop0, losses0, pop0[1], Inf)
+    best_tree, best_loss = evaluate!(p, loss, grammar, pop0, losses0, pop0[1], Inf)
     for iter = 1:p.iterations
         verbose && println("iterations: $i of $(p.iterations)")
         fill!(losses1, missing)
@@ -139,7 +166,25 @@ function genetic_program(p::GeneticProgram, grammar::Grammar, typ::Symbol, loss:
             (j in saveset) || recycle!(bin, pop1[j])
         end
     end
-    ExprOptResult(best_tree, best_loss, get_executable(best_tree, grammar), nothing)
+    alg_result = Dict{Symbol,Any}()
+    _add_result!(alg_result, p.track_method)
+    ExprOptResult(best_tree, best_loss, get_executable(best_tree, grammar), alg_result)
+end
+
+"""
+    _add_result!(d::Dict{Symbol,Any}, t::NoTracking)
+
+Add tracking results to alg_result.  No op for NoTracking.
+"""
+_add_result!(d::Dict{Symbol,Any}, t::NoTracking) = nothing
+"""
+    _add_result!(d::Dict{Symbol,Any}, t::TopKTracking)
+
+Add tracking results to alg_result. 
+"""
+function _add_result!(d::Dict{Symbol,Any}, t::TopKTracking)
+    d[:top_k] = collect(t.q)
+    d
 end
 
 """
@@ -147,8 +192,8 @@ end
 
 Random population initialization.
 """
-function initialize(::RandomInit, pop_size::Int, grammar::Grammar, typ::Symbol, dmap::AbstractVector{Int},
-           max_depth::Int)
+function initialize(::RandomInit, pop_size::Int, grammar::Grammar, typ::Symbol, 
+    dmap::AbstractVector{Int}, max_depth::Int)
     [rand(RuleNode, grammar, typ, dmap, max_depth) for i = 1:pop_size]
 end
 
@@ -157,9 +202,10 @@ end
 
 Tournament selection.
 """
-function select(p::TournamentSelection, pop::Vector{RuleNode}, losses::Vector{Union{Float64,Missing}})
-    ids = StatsBase.sample(1:length(pop), p.k; replace=false, ordered=false) 
-    i = minimum(ids) 
+function select(p::TournamentSelection, pop::Vector{RuleNode}, 
+    losses::Vector{Union{Float64,Missing}})
+    ids = StatsBase.sample(1:length(pop), p.k; replace=false, ordered=true) 
+    i = ids[1] #assumes pop is sorted
     pop[i], i
 end
 
@@ -168,20 +214,20 @@ end
 
 Truncation selection.
 """
-function select(p::TruncationSelection, pop::Vector{RuleNode}, losses::Vector{Union{Float64,Missing}})
+function select(p::TruncationSelection, pop::Vector{RuleNode}, 
+    losses::Vector{Union{Float64,Missing}})
     i = rand(1:p.k)  #assumes pop is sorted
     pop[i], i
 end
 
 """
-    evaluate!(loss::Function, grammar::Grammar, pop::Vector{RuleNode}, losses::Vector{Union{Float64,Missing}}, 
+    evaluate!(p::GeneticProgram, loss::Function, grammar::Grammar, pop::Vector{RuleNode}, losses::Vector{Union{Float64,Missing}}, 
         best_tree::RuleNode, best_loss::Float64)
 
 Evaluate the loss function for population and sort.  Update the globally best tree, if needed.
 """
-function evaluate!(loss::Function, grammar::Grammar, pop::Vector{RuleNode},
-                   losses::Vector{Union{Float64,Missing}}, 
-                   best_tree::RuleNode, best_loss::Float64)
+function evaluate!(p::GeneticProgram, loss::Function, grammar::Grammar, pop::Vector{RuleNode}, 
+    losses::Vector{Union{Float64,Missing}}, best_tree::RuleNode, best_loss::Float64)
 
     for i in eachindex(pop) 
         if ismissing(losses[i])
@@ -193,7 +239,32 @@ function evaluate!(loss::Function, grammar::Grammar, pop::Vector{RuleNode},
     if losses[1] < best_loss
         best_tree, best_loss = deepcopy(pop[1]), losses[1]
     end
+    _update_tracker!(p.track_method, pop, losses)
     (best_tree, best_loss)
+end
+
+"""
+    _update_tracker!(t::NoTracking, pop::Vector{RuleNode}, losses::Vector{Union{Float64,Missing}}) 
+
+Update the tracker.  No op for NoTracking.
+"""
+function _update_tracker!(t::NoTracking, pop::Vector{RuleNode}, 
+    losses::Vector{Union{Float64,Missing}}) 
+    nothing
+end
+"""
+    _update_tracker!(t::TopKTracking, pop::Vector{RuleNode}, losses::Vector{Union{Float64,Missing}})
+
+Update the tracker.  Track top k expressions. 
+"""
+function _update_tracker!(t::TopKTracking, pop::Vector{RuleNode}, 
+    losses::Vector{Union{Float64,Missing}})
+    n = 0
+    for i = 1:length(pop)
+        r = enqueue!(t.q, pop[i], losses[i])
+        r >= 0 && (n += 1) #no clash, increment counter
+        n >= t.k && break 
+    end
 end
 
 """

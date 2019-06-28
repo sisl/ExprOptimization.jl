@@ -22,8 +22,12 @@ let
     pop = collect(iter)
 
     losses = Vector{Float64}(undef,length(pop))
-    (best_tree, best_loss) = CrossEntropys.evaluate!(loss, grammar, pop, losses, pop[1], Inf)
+    (best_tree, best_loss) = CrossEntropys.evaluate!(p, loss, grammar, pop, losses, pop[1], Inf)
     @test Core.eval(best_tree, grammar) == 1
     @test best_loss == 1
+
+    p = CrossEntropy(10, 5, 4, 5; track_method=CrossEntropys.TopKTracking(3))
+    res = optimize(p, grammar, :R, loss)
+    res.alg_result[:top_k]
 end
 

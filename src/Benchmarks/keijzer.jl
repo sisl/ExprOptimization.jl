@@ -127,7 +127,8 @@ function loss_keijzer_11(S::SymbolTable, tree::RuleNode, grammar::Grammar)
     @timeit to "loss" begin
     @timeit to "getex" ex = get_executable(tree, grammar)
     @timeit to "eval loop" for i = 1:length(VARS_KEIJZER_11)
-        keijzer_11_scratch[i] = Core.eval(S, ex, VARS_KEIJZER_11[i])::Float64
+        S[:x], S[:y] = VARS_KEIJZER_11[i]
+        keijzer_11_scratch[i] = Core.eval(S, ex)::Float64
     end
     @timeit to "abs" keijzer_11_scratch .= abs.(keijzer_11_scratch .- GT_KEIJZER_11)
     @timeit to "sum" los = sum(keijzer_11_scratch)

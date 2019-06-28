@@ -4,7 +4,7 @@ module GrammaticalEvolutions
 using ExprRules
 using StatsBase
 
-using ExprOptimization: ExprOptAlgorithm, ExprOptResult 
+using ExprOptimization: ExprOptAlgorithm, ExprOptResult, BoundedPriorityQueue, enqueue!
 import ExprOptimization: optimize 
 
 export GrammaticalEvolution
@@ -13,6 +13,7 @@ const OPERATORS = [:reproduction, :crossover, :mutation]
 
 abstract type SelectionMethod end
 abstract type MutationMethod end
+abstract type TrackingMethod end
 
 """
     GrammaticalEvolution
@@ -31,6 +32,7 @@ Grammatical Evolution.
 - `p_mutation::Float64`: probability of mutation operator
 - `select_method::SelectionMethod`: selection method (default: tournament selection)
 - `mutate_method::InitializationMethod`: mutation method (default: multi-mutate)
+- `track_method::TrackingMethod`: additional tracking, e.g., track top k exprs (default: no additional tracking) 
 """
 struct GrammaticalEvolution <: ExprOptAlgorithm
     pop_size::Int
@@ -41,6 +43,7 @@ struct GrammaticalEvolution <: ExprOptAlgorithm
     p_operators::Weights
     select_method::SelectionMethod
     mutate_method::MutationMethod
+    track_method::TrackingMethod
 
     function GrammaticalEvolution(
         grammar::Grammar,
@@ -54,10 +57,12 @@ struct GrammaticalEvolution <: ExprOptAlgorithm
         p_crossover::Float64,                   #probability of crossover operator
         p_mutation::Float64;                    #probability of mutation operator 
         select_method::SelectionMethod=TournamentSelection(),   #selection method 
-        mutate_method::MutationMethod=MultiMutate(grammar, typ))
+        mutate_method::MutationMethod=MultiMutate(grammar, typ),
+        track_method::TrackingMethod=NoTracking())   #tracking method 
         
         p_operators = Weights([p_reproduction, p_crossover, p_mutation])
-        new(pop_size, iterations, init_gene_length, max_gene_length, max_depth, p_operators, select_method, mutate_method)
+        new(pop_size, iterations, init_gene_length, max_gene_length, max_depth, p_operators, 
+            select_method, mutate_method, track_method)
     end
 end
 
@@ -124,6 +129,29 @@ MultiMutate(grammar::Grammar, typ::Symbol) = MultiMutate([
     GenePruning(grammar, typ)])
 
 """
+    NoTracking
+
+No additional tracking of expressions.
+"""
+struct NoTracking <: TrackingMethod end
+
+"""
+    TopKTracking
+
+Track the top k expressions.
+"""
+struct TopKTracking <: TrackingMethod 
+    k::Int
+    q::BoundedPriorityQueue{RuleNode,Float64}
+
+    function TopKTracking(k::Int)
+        q = BoundedPriorityQueue{RuleNode,Float64}(k,Base.Order.Reverse) #lower is better
+        obj = new(k, q)
+        obj
+    end
+end
+
+"""
     optimize(p::GrammaticalEvolution, grammar::Grammar, typ::Symbol, loss::Function; kwargs...)
 
 Grammatical Evolution algorithm with parameters p, grammar 'grammar', start symbol typ, and loss function 'loss'.  Loss function has the form: los::Float64=loss(node::RuleNode, grammar::Grammar).
@@ -179,7 +207,25 @@ function grammatical_evolution(p::GrammaticalEvolution, grammar::Grammar, typ::S
         losses0, losses1 = losses1, losses0
         best_tree, best_loss = evaluate!(p, grammar, typ, loss, pop0, losses0, best_tree, best_loss)
     end
-    ExprOptResult(best_tree, best_loss, get_executable(best_tree, grammar), nothing)
+    alg_result = Dict{Symbol,Any}()
+    _add_result!(alg_result, p.track_method)
+    ExprOptResult(best_tree, best_loss, get_executable(best_tree, grammar), alg_result)
+end
+
+"""
+    _add_result!(d::Dict{Symbol,Any}, t::NoTracking)
+
+Add tracking results to alg_result.  No op for NoTracking.
+"""
+_add_result!(d::Dict{Symbol,Any}, t::NoTracking) = nothing
+"""
+    _add_result!(d::Dict{Symbol,Any}, t::TopKTracking)
+
+Add tracking results to alg_result. 
+"""
+function _add_result!(d::Dict{Symbol,Any}, t::TopKTracking)
+    d[:top_k] = collect(t.q)
+    d
 end
 
 """
@@ -292,8 +338,8 @@ end
 Evaluate the loss function for population and sort.  Update the globally best tree, if needed.
 """
 function evaluate!(p::GrammaticalEvolution, grammar::Grammar, typ::Symbol, loss::Function,
-                   pop::Vector{Vector{Int}}, losses::Vector{Union{Float64,Missing}}, best_tree::RuleNode, 
-                   best_loss::Float64)
+                   pop::Vector{Vector{Int}}, losses::Vector{Union{Float64,Missing}}, 
+                   best_tree::RuleNode, best_loss::Float64)
 
     for i in eachindex(pop) 
         if ismissing(losses[i])
@@ -308,7 +354,36 @@ function evaluate!(p::GrammaticalEvolution, grammar::Grammar, typ::Symbol, loss:
         best_loss = losses[1]
         best_tree = decode(pop[1], grammar, typ).node
     end
+    _update_tracker!(p.track_method, pop, losses, grammar, typ)
+
     (best_tree, best_loss)
+end
+
+"""
+    _update_tracker!(t::NoTracking, pop::Vector{Vector{Int}}, 
+        losses::Vector{Union{Float64,Missing}}) 
+
+Update the tracker.  No op for NoTracking.
+"""
+function _update_tracker!(t::NoTracking, pop::Vector{Vector{Int}}, 
+    losses::Vector{Union{Float64,Missing}}, grammar::Grammar, typ::Symbol) 
+    nothing
+end
+"""
+    _update_tracker!(t::TopKTracking, pop::Vector{Vector{Int}}, 
+        losses::Vector{Union{Float64,Missing}})
+
+Update the tracker.  Track top k expressions. 
+"""
+function _update_tracker!(t::TopKTracking, pop::Vector{Vector{Int}}, 
+    losses::Vector{Union{Float64,Missing}}, grammar::Grammar, typ::Symbol)
+    n = 0
+    for i = 1:length(pop)
+        tree = decode(pop[i], grammar, typ).node
+        r = enqueue!(t.q, tree, losses[i])
+        r >= 0 && (n += 1) #no clash
+        n >= t.k && break 
+    end
 end
 
 """
