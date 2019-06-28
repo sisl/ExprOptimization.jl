@@ -20,8 +20,7 @@ Please see the [example notebook](http://nbviewer.ipython.org/github/sisl/ExprOp
 
 ## Maintainers:
 
-* Ritchie Lee, ritchie.lee@sv.cmu.edu
-* Tim Wheeler, tawheeler@stanford.edu
+* Ritchie Lee, ritchie@ritchielee.net 
 * Mykel Kochenderfer, mykel@stanford.edu
 
 [![Build Status](https://travis-ci.org/sisl/ExprOptimization.jl.svg?branch=master)](https://travis-ci.org/sisl/ExprOptimization.jl) [![Coverage Status](https://coveralls.io/repos/sisl/ExprOptimization.jl/badge.svg?branch=master)](https://coveralls.io/github/sisl/ExprOptimization.jl?branch=master)
