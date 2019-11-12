@@ -95,13 +95,13 @@ def runonce(i, n_pop):
     pop, log = algorithms.eaSimple(pop, toolbox, 0.5, 0.1, 40, #stats=mstats,
                                    halloffame=hof, verbose=False)
 
-    print str(hof[0])
+    print (str(hof[0]))
     # print log
     return pop, log, hof
 
 def main():
     n_seeds = 50
-    with open('../results/deap_koza_1.csv', 'wb') as csvfile:
+    with open('../results/deap_koza_1.csv', 'w') as csvfile:
         w = csv.writer(csvfile)
         w.writerow(['system', 'problem', 'n_seeds', 'n_pop', 'mean_time_s', 'std_time_s', 'mean_fitness', 'std_fitness'])
 
@@ -110,7 +110,7 @@ def main():
             ts = []
             fitnesses = []
             for i in range(0, n_seeds):
-                print "(n_pop, i) = " + "(" + str(n_pop) + ", " + str(i) + ")"
+                print ("(n_pop, i) = " + "(" + str(n_pop) + ", " + str(i) + ")")
                 tstart = time.clock()  #seconds
                 pop, log, hof = runonce(i, n_pop)
                 ts.append(time.clock() - tstart)
