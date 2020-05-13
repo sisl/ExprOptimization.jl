@@ -1,0 +1,17 @@
+name = "ExprOptimization"
+uuid = "4bafb4bd-4c51-463f-bd0a-5a4e66f7034f"
+authors = ["Ritchie Lee <ritchie@ritchielee.net>", "Mykel Kochenderfer <mykel@stanford.edu>"]
+version = "0.2.1"
+
+[deps]
+AbstractTrees = "1520ce14-60c1-5f80-bbc7-55ef81b5835c"
+CPUTime = "a9c8d775-2e2e-55fc-8582-045d282d599e"
+CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
+ExprRules = "e7058ba0-a568-556c-b31a-209ee9d855a8"
+Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
+StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
+
+[compat]
+julia = "1.0.0"
