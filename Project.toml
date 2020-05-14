@@ -1,5 +1,5 @@
 name = "ExprOptimization"
-uuid = "4bafb4bd-4c51-463f-bd0a-5a4e66f7034f"
+uuid = "0d84ce59-e78b-5c9a-b954-3a5400d7f6ed"
 authors = ["Ritchie Lee <ritchie@ritchielee.net>", "Mykel Kochenderfer <mykel@stanford.edu>"]
 version = "0.2.1"
 
