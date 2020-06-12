@@ -153,7 +153,10 @@ Evaluate the loss function for population and sort.  Update the globally best tr
 function evaluate!(p::CrossEntropy, loss::Function, grammar::Grammar, pop::Vector{RuleNode}, 
     losses::Vector{Float64}, best_tree::RuleNode, best_loss::Float64)
 
-    losses[:] = loss.(pop, Ref(grammar))
+    Threads.@threads for i in 1:length(losses)
+        losses[i] = loss(pop[i], grammar)
+    end
+
     perm = sortperm(losses)
     pop[:], losses[:] = pop[perm], losses[perm]
     if losses[1] < best_loss
