@@ -222,11 +222,13 @@ Evaluate the loss function for population and sort.  Update the globally best tr
 function evaluate!(p::GeneticProgram, loss::Function, grammar::Grammar, pop::Vector{RuleNode}, 
     losses::Vector{Union{Float64,Missing}}, best_tree::RuleNode, best_loss::Float64)
 
-    for i in eachindex(pop) 
-        if ismissing(losses[i])
-            losses[i] = loss(pop[i], grammar)
-        end
+    # Pre-compute indics that are missing to make
+    # the loop multi-threading friendly.
+    idcs_missing = filter(i -> ismissing(losses[i]), eachindex(pop))
+    Threads.@threads for i in idcs_missing
+        losses[i] = loss(pop[i], grammar)
     end
+
     perm = sortperm(losses)
     pop[:], losses[:] = pop[perm], losses[perm]
     if losses[1] < best_loss
