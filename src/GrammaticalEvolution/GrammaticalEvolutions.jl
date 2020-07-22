@@ -341,11 +341,12 @@ function evaluate!(p::GrammaticalEvolution, grammar::Grammar, typ::Symbol, loss:
                    pop::Vector{Vector{Int}}, losses::Vector{Union{Float64,Missing}}, 
                    best_tree::RuleNode, best_loss::Float64)
 
-    for i in eachindex(pop) 
-        if ismissing(losses[i])
-            decoded = decode(pop[i], grammar, typ)
-            losses[i] = depth(decoded.node) > p.max_depth ?  Inf : loss(decoded.node, grammar)
-        end
+    # Pre-compute indics that are missing to make
+    # the loop multi-threading friendly.
+    idcs_missing = filter(i -> ismissing(losses[i]), eachindex(pop))
+    Threads.@threads for i in idcs_missing
+        decoded = decode(pop[i], grammar, typ)
+        losses[i] = depth(decoded.node) > p.max_depth ?  Inf : loss(decoded.node, grammar)
     end
 
     perm = sortperm(losses)

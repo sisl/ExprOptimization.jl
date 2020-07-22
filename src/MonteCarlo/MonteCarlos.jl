@@ -73,16 +73,26 @@ Expression tree optimization using Monte Carlo with parameters p, grammar 'gramm
 function monte_carlo(p::MonteCarlo, grammar::Grammar, typ::Symbol, loss::Function; 
     verbose::Bool=false)
     dmap = mindepth_map(grammar)
-    best_tree, best_loss = RuleNode(0), Inf
-    for i = 1:p.num_samples
-        verbose && println("samples: $i of $(p.num_samples)")
+
+    trees = Vector{RuleNode}(undef, p.num_samples)
+    losses = Vector{Float64}(undef, p.num_samples)
+    Threads.@threads for i in 1:length(losses)
+        # Only verbose if not in multi-threading
+        verbose && Threads.nthreads() == 1 && println("samples: $i of $(p.num_samples)")
         tree = rand(RuleNode, grammar, typ, dmap, p.max_depth)
-        los = float(loss(tree, grammar))
+        trees[i] = tree
+        losses[i] = float(loss(tree, grammar))
+    end
+
+    # A loop is used as `_update_tracker` might not be thread-safe
+    best_tree, best_loss = RuleNode(0), Inf
+    for (tree, los) in zip(trees, losses)
         if los < best_loss
             best_tree, best_loss = tree, los
         end
         _update_tracker!(p.track_method, tree, los)
     end
+
     alg_result = Dict{Symbol,Any}()
     _add_result!(alg_result, p.track_method)
     ExprOptResult(best_tree, best_loss, get_executable(best_tree, grammar), alg_result)
