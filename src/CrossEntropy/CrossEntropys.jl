@@ -106,10 +106,11 @@ function cross_entropy(p::CrossEntropy, grammar::Grammar, typ::Symbol, loss::Fun
     best_tree, best_loss = evaluate!(p, loss, grammar, pop, losses, RuleNode(0), Inf)
     for iter = 1:p.iterations 
         verbose && println("iterations: $iter of $(p.iterations)")
+        # NOTE: fit_mle! should be run before population resampling
+        fit_mle!(pcfg, pop[1:p.top_k], p.p_init)
         for i in eachindex(pop)
             pop[i] = rand(RuleNode, pcfg, typ, dmap, p.max_depth)
         end
-        fit_mle!(pcfg, pop[1:p.top_k], p.p_init)
         best_tree, best_loss = evaluate!(p, loss, grammar, pop, losses, best_tree, best_loss)
     end
     alg_result = Dict{Symbol,Any}()
