@@ -92,6 +92,4 @@ using .CrossEntropys
 include("PIPE/PIPEs.jl")
 using .PIPEs
 
-include("Benchmarks/Benchmarks.jl")
-
 end # module
