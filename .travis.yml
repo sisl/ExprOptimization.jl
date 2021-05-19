@@ -3,13 +3,10 @@ sudo: required
 dist: trusty
 julia:
   - 1.0 
-  - 1.1
+  - 1
 notifications:
   email: false
 before_install:
   - sudo apt-get -qq update
-#script: # use the default script section which is equivalent to the following
-#  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-#  - julia --check-bounds=yes -e 'Pkg.clone(pwd()); Pkg.build("ExprOptimization"); Pkg.test("ExprOptimization"; coverage=true)'
 after_success:
   - julia -e 'cd(Pkg.dir("ExprOptimization")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
