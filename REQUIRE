@@ -1,9 +1,0 @@
-julia 1.0
-ExprRules
-Reexport
-StatsBase
-AbstractTrees
-CPUTime
-DataFrames
-DataStructures
-CSV
