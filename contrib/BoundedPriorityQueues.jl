@@ -56,7 +56,7 @@ function DataStructures.enqueue!(q::BoundedPriorityQueue{K,V}, k::K, v::V;
     end
     n = length(q.pq)
     enqueue!(q.pq, k, v)
-    n_add = n - length(q.pq) #number of items added
+    n_add = length(q.pq) - n #number of items added
     while length(q.pq) > q.N
         dequeue!(q.pq)
     end
