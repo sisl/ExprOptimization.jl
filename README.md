@@ -5,7 +5,7 @@
 
 
 
-Algorithms for the optimization of Julia expressions derived from a grammar.  
+Algorithms for the optimization of Julia expressions derived from a grammar. For an introduction to expression optimization, see chapter 20 of [Algorithms for Optimization](https://algorithmsbook.com/optimization) by Mykel J. Kochenderfer and Tim A. Wheeler (MIT Press, 2019).
 
 The following algorithms are implemented:
 * Monte Carlo
