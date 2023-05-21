@@ -1,7 +1,0 @@
-language: julia
-coveralls: true
-julia:
-  - 1.0
-  - 1
-notifications:
-  email: false
