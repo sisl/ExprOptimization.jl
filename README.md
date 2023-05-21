@@ -16,7 +16,7 @@ The following algorithms are implemented:
 
 ## Usage
 
-Please see the [example notebook](http://nbviewer.ipython.org/github/sisl/ExprOptimization.jl/blob/master/examples/symbolic_regression.ipynb).
+Please see the [example notebooks](https://github.com/sisl/ExprOptimization.jl/tree/master/examples).
 
 ## Maintainers:
 
