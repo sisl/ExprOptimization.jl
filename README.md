@@ -1,7 +1,7 @@
 # ExprOptimization.jl
 
 [![Build Status](https://github.com/sisl/ExprOptimization.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/sisl/ExprOptimization.jl/actions/workflows/CI.yml/)
-[![codecov](https://codecov.io/gh/sisl/ExprOptimization.jl/branch/master/graph/badge.svg?token=6pQE1gHKIz)](https://codecov.io/gh/sisl/ExprOptimization.jl)
+[![codecov](https://codecov.io/gh/sisl/ExprOptimization.jl/branch/master/graph/badge.svg?token=ZLMNVzDem0)](https://codecov.io/gh/sisl/ExprOptimization.jl)
 
 
 
